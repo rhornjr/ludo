@@ -6,12 +6,14 @@ interface ColorSelectionProps {
   availableColors: PlayerColor[];
   onColorSelect: (color: PlayerColor) => void;
   playerName: string;
+  gameId?: string;
 }
 
 export const ColorSelection: React.FC<ColorSelectionProps> = ({ 
   availableColors, 
   onColorSelect, 
-  playerName 
+  playerName,
+  gameId
 }) => {
   return (
     <div className="color-selection-overlay">

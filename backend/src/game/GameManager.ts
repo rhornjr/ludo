@@ -61,11 +61,14 @@ export class GameManager {
     let finalColor: PlayerColor;
     if (playerColor) {
       finalColor = playerColor;
+      console.log(`Player ${playerName} joining with specified color: ${playerColor}`);
     } else {
       // Find first available color for temporary assignment
       const usedColors = game.players.map(p => p.color);
       const allColors = [PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
       finalColor = allColors.find(color => !usedColors.includes(color)) || PlayerColor.RED;
+      console.log(`Player ${playerName} joining without color, assigned temporary color: ${finalColor}`);
+      console.log(`Used colors in game: ${usedColors.join(', ')}`);
     }
     
     const player: Player = {
@@ -99,23 +102,44 @@ export class GameManager {
       return { success: false, error: 'Game not found' };
     }
 
+    console.log(`=== ASSIGN COLOR DEBUG ===`);
+    console.log(`Game ID: ${gameId}, Player ID: ${playerId}, Requested Color: ${playerColor}`);
+    console.log(`Current players in game:`, game.players.map(p => ({ id: p.id, name: p.name, color: p.color })));
+
     // Check if the requested color is available (excluding the current player)
+    console.log(`Checking if color ${playerColor} is taken by other players...`);
+    const playersWithSameColor = game.players.filter(p => p.color === playerColor);
+    console.log(`Players with color ${playerColor}:`, playersWithSameColor.map(p => ({ id: p.id, name: p.name })));
+    
+    // Find the current player to check if they're trying to assign their own current color
+    const currentPlayer = game.players.find(p => p.id === playerId);
+    const isAssigningOwnColor = currentPlayer && currentPlayer.color === playerColor;
+    
     const isColorTaken = game.players.some(p => p.color === playerColor && p.id !== playerId);
+    console.log(`Is color taken by other player: ${isColorTaken}`);
+    console.log(`Is player assigning their own current color: ${isAssigningOwnColor}`);
+    console.log(`Current player ID: ${playerId}`);
+    console.log(`Players with same color but different ID:`, game.players.filter(p => p.color === playerColor && p.id !== playerId).map(p => ({ id: p.id, name: p.name })));
+    
     if (isColorTaken) {
+      console.log(`Color ${playerColor} is already taken by another player`);
       return { success: false, error: `Color ${playerColor} is already taken` };
     }
 
     // Find the player and update their color
     const player = game.players.find(p => p.id === playerId);
     if (!player) {
+      console.log(`Player with ID ${playerId} not found in game`);
       return { success: false, error: 'Player not found' };
     }
 
+    console.log(`Updating player ${player.name} color from ${player.color} to ${playerColor}`);
     player.color = playerColor;
 
     // Notify all players in the game about the color change
     this.io.to(gameId).emit('playerColorChanged', { player, game: this.serializeGameForSocket(game) });
 
+    console.log(`Color assignment successful`);
     return { success: true, gameId, game: this.serializeGameForSocket(game) };
   }
 
@@ -126,18 +150,30 @@ export class GameManager {
       return { success: false, error: 'Game not found' };
     }
 
+    console.log(`=== GET AVAILABLE COLORS DEBUG ===`);
+    console.log(`Game ID: ${gameId}, Exclude Player ID: ${excludePlayerId}`);
+    console.log(`All players in game:`, game.players.map(p => ({ id: p.id, name: p.name, color: p.color })));
+
     let usedColors = game.players.map(p => p.color);
+    console.log(`Used colors before exclusion: ${usedColors.join(', ')}`);
     
     // If excluding a specific player, remove their color from used colors
     if (excludePlayerId) {
       const excludePlayer = game.players.find(p => p.id === excludePlayerId);
       if (excludePlayer) {
+        console.log(`Excluding player ${excludePlayer.name} with color ${excludePlayer.color}`);
         usedColors = usedColors.filter(color => color !== excludePlayer.color);
+        console.log(`Used colors after exclusion: ${usedColors.join(', ')}`);
+      } else {
+        console.log(`Player with ID ${excludePlayerId} not found for exclusion`);
       }
+    } else {
+      console.log(`No player ID provided for exclusion - this might be the issue!`);
     }
     
     const allColors = [PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
     const availableColors = allColors.filter(color => !usedColors.includes(color));
+    console.log(`Available colors: ${availableColors.join(', ')}`);
 
     return { success: true, availableColors };
   }

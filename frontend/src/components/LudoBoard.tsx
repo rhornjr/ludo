@@ -121,15 +121,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return;
     }
     
-    // Reset shouldGetExtraRoll at the start of each die roll to prevent stale values
-    // This ensures the same logic path as clicking on discs
-    console.log(`=== RESETTING EXTRA ROLL FLAG IN DIE CLICK ===`);
-    console.log(`Resetting shouldGetExtraRoll at start of die click (was: ${shouldGetExtraRoll})`);
-    setShouldGetExtraRoll(false);
-    console.log(`shouldGetExtraRoll reset to false at start of die click`);
-    console.log(`=== END RESET ===`);
-    console.log(`FORCE RELOAD - This message should appear if the new code is loaded!`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
+    // Don't reset shouldGetExtraRoll here - let collision detection handle it
+    console.log(`=== DIE CLICK - shouldGetExtraRoll state: ${shouldGetExtraRoll} ===`);
     
     rollDie();
   };
@@ -914,17 +907,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return;
     }
 
-    // Reset shouldGetExtraRoll at the start of each move to prevent stale values
-    console.log(`=== RESETTING EXTRA ROLL FLAG ===`);
-    console.log(`Resetting shouldGetExtraRoll at start of move (was: ${shouldGetExtraRoll})`);
-    setShouldGetExtraRoll(false);
-    console.log(`shouldGetExtraRoll reset to false at start of move`);
-    console.log(`=== END RESET ===`);
-    
-    // Force a state update to ensure the reset takes effect
-    setTimeout(() => {
-      console.log(`Verifying shouldGetExtraRoll reset: ${shouldGetExtraRoll}`);
-    }, 0);
+    // Don't reset shouldGetExtraRoll here - let collision detection handle it
+    console.log(`=== DISC CLICK - shouldGetExtraRoll state: ${shouldGetExtraRoll} ===`);
 
     // Get color-specific data
     const colorData = getColorData(playerColor);

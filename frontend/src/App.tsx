@@ -18,6 +18,19 @@ function App() {
   // Debug logging
   console.log('App state:', { isConnected, currentGame, gameId, showLobby, currentPlayer, showColorSelection });
 
+  // Effect to refresh available colors when game state changes (e.g., when another player changes color)
+  React.useEffect(() => {
+    if (currentGame && showColorSelection && gameId && currentPlayer) {
+      console.log('Refreshing available colors due to game state change');
+      getAvailableColors(gameId, currentPlayer.id).then(result => {
+        if (result.success && result.availableColors) {
+          console.log('Updated available colors:', result.availableColors);
+          setAvailableColors(result.availableColors);
+        }
+      });
+    }
+  }, [currentGame, showColorSelection, gameId, currentPlayer]);
+
 
 
   const handleCreateGame = async (playerName: string) => {
@@ -36,8 +49,14 @@ function App() {
             setCurrentPlayer({ id: player.id, name: player.name, color: player.color });
           }
         }
-        // For a new game, all colors are available
-        setAvailableColors([PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW]);
+        // Get available colors, excluding the current player's temporary color
+        const colorsResult = await getAvailableColors(newGameId, result.game?.players.find(p => p.name === playerName)?.id);
+        if (colorsResult.success && colorsResult.availableColors) {
+          setAvailableColors(colorsResult.availableColors);
+        } else {
+          // Fallback to all colors if getAvailableColors fails
+          setAvailableColors([PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW]);
+        }
         setShowColorSelection(true);
       } else {
         alert('Failed to join created game');
@@ -216,6 +235,7 @@ function App() {
               availableColors={availableColors}
               onColorSelect={handleColorSelect}
               playerName={pendingPlayerName}
+              gameId={gameId || undefined}
             />
           )}
         </div>

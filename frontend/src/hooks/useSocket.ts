@@ -273,6 +273,9 @@ export const useSocket = () => {
       console.log('Player color changed:', player.name, 'New color:', player.color);
       console.log('Updated game state:', game);
       debugSetCurrentGame(game);
+      
+      // If we're still in color selection, refresh the available colors
+      // This will be handled by the App component when it detects the game state change
     };
 
     socket.on('playerJoined', handlePlayerJoined);
