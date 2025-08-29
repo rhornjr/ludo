@@ -1,0 +1,22 @@
+{
+  "name": "ludo-game",
+  "version": "1.0.0",
+  "description": "A multiplayer Ludo game built with React, TypeScript, and Node.js",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:network": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:network\"",
+    "dev:frontend": "npm run start --workspace=frontend",
+    "dev:frontend:network": "npm run start:network --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspaces",
+    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

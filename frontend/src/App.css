@@ -1,0 +1,180 @@
+.app {
+  text-align: center;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.loading h2 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.error {
+  color: #ff6b6b;
+  font-weight: bold;
+}
+
+.game-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.game-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 2rem;
+}
+
+.game-header p {
+  margin: 0;
+  color: #666;
+  font-weight: 600;
+}
+
+.game-id-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #666;
+  font-weight: 600;
+}
+
+.copy-btn {
+  background: transparent;
+  color: #667eea;
+  border: 1px solid #667eea;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.copy-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.player-color {
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+}
+
+.player-color.red {
+  background: #ff6b6b;
+}
+
+.player-color.green {
+  background: #51cf66;
+}
+
+.player-color.blue {
+  background: #339af0;
+}
+
+.player-color.yellow {
+  background: #ffd43b;
+  color: #333;
+}
+
+.game-locked-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  color: #856404;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.lock-icon {
+  font-size: 1.1rem;
+}
+
+.back-to-lobby-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.back-to-lobby-btn:hover {
+  background: #5a6fd8;
+}
+
+.game-content {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+}
+
+
+
+.waiting {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.waiting h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.waiting p {
+  color: #666;
+  font-size: 1.1rem;
+}
