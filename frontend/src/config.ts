@@ -10,7 +10,7 @@ const config = {
   },
   // For production (when you deploy)
   production: {
-    serverUrl: process.env.REACT_APP_SERVER_URL || 'http://localhost:3001'
+    serverUrl: process.env.REACT_APP_SERVER_URL || 'http://ludo-env-1.eba-mbadkmyd.eu-north-1.elasticbeanstalk.com'
   }
 };
 
