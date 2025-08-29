@@ -7,7 +7,7 @@ import { PlayerColor } from './types/game';
 import './App.css';
 
 function App() {
-  const { socket, isConnected, currentGame, error, createGame, joinGame, getAvailableColors, assignColor, rollDie, switchTurn, moveDisc, setDieRollCallback, pendingDieRoll } = useSocket();
+  const { socket, isConnected, currentGame, error, createGame, joinGame, getAvailableColors, assignColor, startGame, rollDie, switchTurn, moveDisc, setDieRollCallback, pendingDieRoll } = useSocket();
   const [gameId, setGameId] = useState<string | null>(null);
   const [showLobby, setShowLobby] = useState(true);
   const [currentPlayer, setCurrentPlayer] = useState<{ id: string; name: string; color: PlayerColor } | null>(null);
@@ -196,6 +196,7 @@ function App() {
                 socketRollDie={rollDie}
                 switchTurn={switchTurn}
                 moveDisc={moveDisc}
+                startGame={startGame}
                 socket={socket}
                 currentGame={currentGame}
                 setDieRollCallback={setDieRollCallback}

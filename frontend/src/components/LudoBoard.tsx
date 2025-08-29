@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { PlayerColor, Player } from '../types/game';
+import { PlayerColor, Player, GameState } from '../types/game';
 import { Sounds } from '../helpers/Sounds';
+import { StarterSelection } from './StarterSelection';
 import './LudoBoard.css';
 
 interface LudoBoardProps {
@@ -8,16 +9,17 @@ interface LudoBoardProps {
   onPawnClick?: (playerColor: PlayerColor, pawnId: number) => void;
   onDieRoll?: (result: number) => void;
   gameId?: string;
-  socketRollDie?: (gameId: string) => Promise<{ result: number }>;
+  socketRollDie?: (gameId: string) => Promise<{ success: boolean; result?: number; error?: string }>;
   switchTurn?: (gameId: string) => Promise<{ success: boolean }>;
   moveDisc?: (gameId: string, playerColor: PlayerColor, discIndex: number, newPosition: [number, number]) => Promise<{ success: boolean }>;
+  startGame?: (gameId: string) => Promise<{ success: boolean; error?: string }>;
   socket?: any;
   currentGame?: any;
   setDieRollCallback?: (callback: (result: number) => void) => void;
   pendingDieRoll?: number | null;
 }
 
-export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnClick, onDieRoll, gameId, socketRollDie, switchTurn, moveDisc, socket, currentGame, setDieRollCallback, pendingDieRoll }) => {
+export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnClick, onDieRoll, gameId, socketRollDie, switchTurn, moveDisc, startGame, socket, currentGame, setDieRollCallback, pendingDieRoll }) => {
   // Derive current turn from game state
   const currentTurnColor = currentGame?.players[currentGame.currentPlayerIndex]?.color;
   const [showCoordinates, setShowCoordinates] = useState(false);
@@ -74,8 +76,37 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const [confetti, setConfetti] = useState<Array<{id: number, x: number, y: number, color: string, rotation: number, velocity: number}>>([]);
   const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
 
-  
+  // Starter selection state
+  const [showStarterSelection, setShowStarterSelection] = useState(false);
 
+  // Handle starting the game
+  const handleStartGame = async () => {
+    if (!gameId || !startGame) return;
+    
+    try {
+      const result = await startGame(gameId);
+      if (!result.success) {
+        alert(result.error || 'Failed to start game');
+      }
+    } catch (error) {
+      console.error('Error starting game:', error);
+      alert('Failed to start game');
+    }
+  };
+
+  // Handle starter selection completion
+  const handleStarterSelectionComplete = (selectedPlayer: Player) => {
+    console.log('Starter selection completed:', selectedPlayer);
+    setShowStarterSelection(false);
+  };
+
+  // Show starter selection when game state is SELECTING_STARTER
+  useEffect(() => {
+    if (currentGame?.gameState === GameState.SELECTING_STARTER) {
+      setShowStarterSelection(true);
+    }
+    // Don't automatically hide it - let the StarterSelection component control its own visibility
+  }, [currentGame?.gameState]);
 
   // Disable the die completely when rolling or when player has already rolled
   const handleDieClick = async () => {
@@ -1566,8 +1597,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 key={number}
                 className={`force-die ${forcedRollNumber === number ? 'active' : ''}`}
                 style={{
-                  opacity: ((localPlayerColor && localPlayerColor !== currentTurnColor && currentGame?.currentPlayerIndex !== 0) || (hasRolled && !moveMade)) ? 0.5 : 1,
-                  cursor: ((localPlayerColor && localPlayerColor !== currentTurnColor && currentGame?.currentPlayerIndex !== 0) || (hasRolled && !moveMade)) ? 'not-allowed' : 'pointer'
+                  opacity: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade)) ? 0.5 : 1,
+                  cursor: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade)) ? 'not-allowed' : 'pointer'
                 }}
                 onClick={() => {
                   console.log('Die clicked:', number);
@@ -1585,8 +1616,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                   }
                   
                   // Only allow rolling if it's the current player's turn
-                  // For the first player, allow rolling even if they haven't selected their final color yet
-                  if (localPlayerColor && localPlayerColor !== currentTurnColor && currentGame?.currentPlayerIndex !== 0) {
+                  if (localPlayerColor && localPlayerColor !== currentTurnColor) {
                     console.log('Not your turn to roll');
                     return;
                   }
@@ -1846,6 +1876,63 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
         </div>
       </div>
+
+      {/* Starter Selection Overlay */}
+      {showStarterSelection && currentGame?.players && (
+        <StarterSelection
+          players={currentGame.players}
+          onSelectionComplete={handleStarterSelectionComplete}
+          currentGame={currentGame}
+        />
+      )}
+
+      {/* Waiting for Players Screen */}
+      {currentGame?.gameState === GameState.WAITING && currentGame?.players && currentGame.players.length === 1 && (
+        <div className="start-game-overlay">
+          <div className="start-game-container">
+            <h2>Waiting for Players</h2>
+            <p>Share the Game ID with other players to join!</p>
+            <div className="waiting-players">
+              <div className="current-players">
+                <h3>Current Players:</h3>
+                {currentGame.players.map((player: any, index: number) => (
+                  <div key={player.id} className={`player-item ${player.color}`}>
+                    <span className="player-name">{player.name}</span>
+                    <span className="player-color-badge">{player.color}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Start Game Button */}
+      {currentGame?.gameState === GameState.WAITING && currentGame?.players && currentGame.players.length >= 2 && (
+        <div className="start-game-overlay">
+          <div className="start-game-container">
+            <h2>Ready to Start?</h2>
+            <p>{currentGame.players.length} players have joined</p>
+            <div className="waiting-players">
+              <div className="current-players">
+                <h3>Players:</h3>
+                {currentGame.players.map((player: any, index: number) => (
+                  <div key={player.id} className={`player-item ${player.color}`}>
+                    <span className="player-name">{player.name}</span>
+                    <span className="player-color-badge">{player.color}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button 
+              className="start-game-button"
+              onClick={handleStartGame}
+            >
+              🎲 Start Game
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Victory Celebration */}
       {showVictory && (

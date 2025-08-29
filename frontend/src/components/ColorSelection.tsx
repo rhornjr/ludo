@@ -45,10 +45,6 @@ export const ColorSelection: React.FC<ColorSelectionProps> = ({
             );
           })}
         </div>
-        
-        <div className="color-selection-info">
-          <p>Select a color to join the game and start playing!</p>
-        </div>
       </div>
     </div>
   );

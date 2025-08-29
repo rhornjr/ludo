@@ -46,6 +46,11 @@ io.on('connection', (socket) => {
         const result = gameManager.assignColor(gameId, socket.id, playerColor);
         callback(result);
     });
+    socket.on('startGame', ({ gameId }, callback) => {
+        console.log('Start game request received for game:', gameId, 'from socket:', socket.id);
+        const result = gameManager.startGameWithRandomSelection(gameId);
+        callback(result);
+    });
     socket.on('rollDie', async ({ gameId }, callback) => {
         console.log('Roll die request received for game:', gameId, 'from socket:', socket.id);
         const result = gameManager.rollDie(gameId, socket.id);

@@ -127,23 +127,32 @@ export const useSocket = () => {
       }
 
       socket.emit('assignColor', { gameId, playerColor }, (result: GameResult) => {
-        if (result.success) {
-          // Update the current game state
-          debugSetCurrentGame(result.game || null);
-        }
         resolve(result);
       });
     });
   };
 
-  const rollDie = (gameId: string): Promise<{ result: number }> => {
+  const startGame = (gameId: string): Promise<GameResult> => {
     return new Promise((resolve, reject) => {
       if (!socket) {
         reject(new Error('Socket not connected'));
         return;
       }
 
-      socket.emit('rollDie', { gameId }, (response: { result: number }) => {
+      socket.emit('startGame', { gameId }, (result: GameResult) => {
+        resolve(result);
+      });
+    });
+  };
+
+  const rollDie = (gameId: string): Promise<{ success: boolean; result?: number; error?: string }> => {
+    return new Promise((resolve, reject) => {
+      if (!socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+
+      socket.emit('rollDie', { gameId }, (response: { success: boolean; result?: number; error?: string }) => {
         resolve(response);
       });
     });
@@ -198,6 +207,11 @@ export const useSocket = () => {
 
     const handleGameStarted = ({ game }: { game: Game }) => {
       console.log('Game started:', game);
+      debugSetCurrentGame(game);
+    };
+
+    const handleStarterSelectionStarted = ({ game }: { game: Game }) => {
+      console.log('Starter selection started:', game);
       debugSetCurrentGame(game);
     };
 
@@ -264,6 +278,7 @@ export const useSocket = () => {
     socket.on('playerJoined', handlePlayerJoined);
     socket.on('playerLeft', handlePlayerLeft);
     socket.on('gameStarted', handleGameStarted);
+    socket.on('starterSelectionStarted', handleStarterSelectionStarted);
     socket.on('dieRolled', handleDieRolled);
     socket.on('turnSwitched', handleTurnSwitched);
     socket.on('discMoved', handleDiscMoved);
@@ -273,6 +288,7 @@ export const useSocket = () => {
       socket.off('playerJoined', handlePlayerJoined);
       socket.off('playerLeft', handlePlayerLeft);
       socket.off('gameStarted', handleGameStarted);
+      socket.off('starterSelectionStarted', handleStarterSelectionStarted);
       socket.off('dieRolled', handleDieRolled);
       socket.off('turnSwitched', handleTurnSwitched);
       socket.off('discMoved', handleDiscMoved);
@@ -289,6 +305,7 @@ export const useSocket = () => {
     joinGame,
     getAvailableColors,
     assignColor,
+    startGame,
     rollDie,
     switchTurn,
     moveDisc,

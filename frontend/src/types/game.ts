@@ -22,6 +22,7 @@ export interface Game {
   board: Board;
   createdAt: Date;
   gameLocked: boolean;
+  starterSelectionTimeout?: any;
 }
 
 export interface Board {
@@ -54,6 +55,7 @@ export enum PlayerColor {
 
 export enum GameState {
   WAITING = 'waiting',
+  SELECTING_STARTER = 'selecting_starter',
   PLAYING = 'playing',
   FINISHED = 'finished'
 }

@@ -81,15 +81,15 @@ export class GameManager {
 
     // Notify all players in the game
     console.log(`Player ${playerName} joined game ${gameId}. Total players: ${game.players.length}`);
-    this.io.to(gameId).emit('playerJoined', { player, game });
+    this.io.to(gameId).emit('playerJoined', { player, game: this.serializeGameForSocket(game) });
 
-    // If we have 4 players, start the game
-    if (game.players.length === 4) {
-      console.log(`Starting game ${gameId} with 4 players`);
-      this.startGame(gameId);
-    }
+    // Don't automatically start the game - let players manually start it
+    // if (game.players.length === 4) {
+    //   console.log(`Starting game ${gameId} with 4 players`);
+    //   this.startGame(gameId);
+    // }
 
-    return { success: true, gameId, game };
+    return { success: true, gameId, game: this.serializeGameForSocket(game) };
   }
 
   assignColor(gameId: string, playerId: string, playerColor: PlayerColor): GameResult {
@@ -114,9 +114,9 @@ export class GameManager {
     player.color = playerColor;
 
     // Notify all players in the game about the color change
-    this.io.to(gameId).emit('playerColorChanged', { player, game });
+    this.io.to(gameId).emit('playerColorChanged', { player, game: this.serializeGameForSocket(game) });
 
-    return { success: true, gameId, game };
+    return { success: true, gameId, game: this.serializeGameForSocket(game) };
   }
 
   getAvailableColors(gameId: string, excludePlayerId?: string): { success: boolean; availableColors?: PlayerColor[]; error?: string } {
@@ -159,7 +159,7 @@ export class GameManager {
       this.usedGameIds.delete(gameId);
     } else {
       // Notify remaining players
-      this.io.to(gameId).emit('playerLeft', { playerId, game });
+      this.io.to(gameId).emit('playerLeft', { playerId, game: this.serializeGameForSocket(game) });
     }
   }
 
@@ -198,7 +198,7 @@ export class GameManager {
 
     console.log('Turn switched to player index:', game.currentPlayerIndex, 'player color:', game.players[game.currentPlayerIndex]?.color);
 
-    return { success: true, game };
+    return { success: true, game: this.serializeGameForSocket(game) };
   }
 
   moveDisc(gameId: string, playerColor: PlayerColor, discIndex: number, newPosition: [number, number]): { success: boolean; game?: Game; error?: string } {
@@ -245,6 +245,11 @@ export class GameManager {
     }));
   }
 
+  private serializeGameForSocket(game: Game): Omit<Game, 'starterSelectionTimeout'> {
+    const { starterSelectionTimeout, ...serializedGame } = game;
+    return serializedGame;
+  }
+
   private startGame(gameId: string): void {
     const game = this.games.get(gameId);
     if (!game) return;
@@ -252,6 +257,56 @@ export class GameManager {
     game.gameState = GameState.PLAYING;
     game.currentPlayerIndex = 0;
 
-    this.io.to(gameId).emit('gameStarted', { game });
+    this.io.to(gameId).emit('gameStarted', { game: this.serializeGameForSocket(game) });
+  }
+
+  startGameWithRandomSelection(gameId: string): { success: boolean; game?: Game; error?: string } {
+    const game = this.games.get(gameId);
+    
+    if (!game) {
+      return { success: false, error: 'Game not found' };
+    }
+
+    if (game.gameState !== GameState.WAITING) {
+      return { success: false, error: 'Game has already started' };
+    }
+
+    if (game.players.length < 2) {
+      return { success: false, error: 'Need at least 2 players to start the game' };
+    }
+
+    // Enter the selecting starter state
+    game.gameState = GameState.SELECTING_STARTER;
+    
+    // Notify all players that we're starting the selection process
+    this.io.to(gameId).emit('starterSelectionStarted', { game: this.serializeGameForSocket(game) });
+
+    // After a brief delay, randomly select the starting player
+    // Use a single timeout per game to prevent multiple selections
+    if (game.starterSelectionTimeout) {
+      clearTimeout(game.starterSelectionTimeout);
+    }
+    
+    game.starterSelectionTimeout = setTimeout(() => {
+      this.selectRandomStarter(gameId);
+      game.starterSelectionTimeout = null;
+    }, 1000);
+
+    return { success: true, game: this.serializeGameForSocket(game) };
+  }
+
+  private selectRandomStarter(gameId: string): void {
+    const game = this.games.get(gameId);
+    if (!game || game.gameState !== GameState.SELECTING_STARTER) return;
+
+    // Randomly select a starting player
+    const randomIndex = Math.floor(Math.random() * game.players.length);
+    game.currentPlayerIndex = randomIndex;
+    game.gameState = GameState.PLAYING;
+
+    console.log(`Game ${gameId} started with player ${game.players[randomIndex].name} (${game.players[randomIndex].color})`);
+
+    // Notify all players about the selected starter and game start
+    this.io.to(gameId).emit('gameStarted', { game: this.serializeGameForSocket(game) });
   }
 }

@@ -11,6 +11,7 @@ var PlayerColor;
 var GameState;
 (function (GameState) {
     GameState["WAITING"] = "waiting";
+    GameState["SELECTING_STARTER"] = "selecting_starter";
     GameState["PLAYING"] = "playing";
     GameState["FINISHED"] = "finished";
 })(GameState || (exports.GameState = GameState = {}));

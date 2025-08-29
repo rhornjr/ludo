@@ -850,3 +850,159 @@
   z-index: 200;
   animation: explosion 0.6s ease-out forwards;
 }
+
+/* Start Game Overlay */
+.start-game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.start-game-container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  animation: slideUp 0.3s ease-out;
+}
+
+.start-game-container h2 {
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.start-game-container p {
+  margin: 0 0 30px 0;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.waiting-players {
+  margin-top: 20px;
+}
+
+.current-players h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border-left: 4px solid;
+}
+
+.player-item.red {
+  border-left-color: #ff6b6b;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);
+}
+
+.player-item.green {
+  border-left-color: #51cf66;
+  background: linear-gradient(135deg, #f4fce3 0%, #e9fac8 100%);
+}
+
+.player-item.blue {
+  border-left-color: #339af0;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e7f5ff 100%);
+}
+
+.player-item.yellow {
+  border-left-color: #ffd43b;
+  background: linear-gradient(135deg, #fff9db 0%, #fff3bf 100%);
+}
+
+.player-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.player-color-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: white;
+}
+
+.player-color-badge.red {
+  background: #ff6b6b;
+}
+
+.player-color-badge.green {
+  background: #51cf66;
+}
+
+.player-color-badge.blue {
+  background: #339af0;
+}
+
+.player-color-badge.yellow {
+  background: #ffd43b;
+  color: #333;
+}
+
+.start-game-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  min-width: 250px;
+}
+
+.start-game-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+}
+
+.start-game-button:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

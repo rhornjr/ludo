@@ -20,6 +20,7 @@ export interface Game {
     board: Board;
     createdAt: Date;
     gameLocked: boolean;
+    starterSelectionTimeout?: NodeJS.Timeout | null;
 }
 export interface Board {
     paths: Path[];
@@ -46,6 +47,7 @@ export declare enum PlayerColor {
 }
 export declare enum GameState {
     WAITING = "waiting",
+    SELECTING_STARTER = "selecting_starter",
     PLAYING = "playing",
     FINISHED = "finished"
 }

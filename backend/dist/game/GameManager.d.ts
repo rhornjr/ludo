@@ -32,6 +32,13 @@ export declare class GameManager {
     };
     private createBoard;
     private createPawns;
+    private serializeGameForSocket;
     private startGame;
+    startGameWithRandomSelection(gameId: string): {
+        success: boolean;
+        game?: Game;
+        error?: string;
+    };
+    private selectRandomStarter;
 }
 //# sourceMappingURL=GameManager.d.ts.map
