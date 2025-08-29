@@ -239,8 +239,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid #333;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.7;
 }
 
 .red-arrow {
@@ -479,6 +480,7 @@
   z-index: 0;
   pointer-events: none;
   background-color: transparent;
+  filter: brightness(1.5) opacity(0.6);
 }
 
 .disc-safe-shield {
@@ -493,6 +495,7 @@
   z-index: 0;
   pointer-events: none;
   background-color: transparent;
+  filter: brightness(1.5) opacity(0.6);
 }
 
 .special-die {
@@ -792,10 +795,17 @@
 }
 
 .extra-roll-symbol {
-  font-size: 27.6px;
-  color: #333;
+  font-size: 20.7px;
+  color: #b0b0b0;
   line-height: 1;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+  opacity: 0.8;
+  width: 150%; /* Make the container 50% bigger */
+  height: 150%; /* Make the container 50% bigger */
+  transform: translate(-16.67%, -8.33%); /* Adjust vertical position to account for transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Knocked Home Animation */

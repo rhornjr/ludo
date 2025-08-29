@@ -90,16 +90,6 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return;
     }
     
-    // Reset shouldGetExtraRoll at the start of each die roll to prevent stale values
-    // This ensures the same logic path as clicking on discs
-    console.log(`=== RESETTING EXTRA ROLL FLAG IN DIE CLICK ===`);
-    console.log(`Resetting shouldGetExtraRoll at start of die click (was: ${shouldGetExtraRoll})`);
-    setShouldGetExtraRoll(false);
-    console.log(`shouldGetExtraRoll reset to false at start of die click`);
-    console.log(`=== END RESET ===`);
-    console.log(`FORCE RELOAD - This message should appear if the new code is loaded!`);
-    console.log(`Timestamp: ${new Date().toISOString()}`);
-    
     rollDie();
   };
 
@@ -144,13 +134,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Reset local state when turn changes
     if (localPlayerColor !== currentTurnColor) {
       console.log('Resetting local state for turn change');
-      console.log(`Previous shouldGetExtraRoll: ${shouldGetExtraRoll}`);
       setDieResult(null);
       setMoveMade(false);
       setHasRolled(false);
       setIsRolling(false);
       setShouldGetExtraRoll(false);
-      console.log('shouldGetExtraRoll reset to false');
     }
   }, [currentTurnColor, localPlayerColor]);
 
@@ -263,6 +251,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                   // Only play extra roll sound if this is the final position and it's an extra roll square
                   if (stepIndex === animationSteps.length - 1 && isExtraRollSquare(animationSteps[stepIndex])) {
                     Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+                    // Grant extra roll if this is the local player's move - ONLY at final position
+                    if (playerColor === localPlayerColor) {
+                      setShouldGetExtraRoll(true);
+                      console.log('Extra roll granted for landing on extra roll square at final position');
+                    }
                   } else if (stepIndex === animationSteps.length - 1) {
                     // Play regular sound for final position if it's not an extra roll square
                     Sounds.playSound().catch(error => console.log('Error playing sound:', error));
@@ -317,6 +310,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       // Play sound for immediate movement
       if (isExtraRollSquare(newPosition)) {
         Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+        // Grant extra roll if this is the local player's move
+        if (playerColor === localPlayerColor) {
+          setShouldGetExtraRoll(true);
+          console.log('Extra roll granted for landing on extra roll square');
+        }
       } else {
         Sounds.playSound().catch(error => console.log('Error playing sound:', error));
       }
@@ -402,11 +400,14 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         }
         
         // Check if the current player has any valid moves (only for the current player)
-        // Note: shouldGetExtraRoll is handled in handleTurnLogic after the move is completed
+        // Handle extra roll logic
         if (localPlayerColor === currentTurnColor) {
-          // The shouldGetExtraRoll flag will be checked and reset in handleTurnLogic
-          // after the player makes their move
-          if (result !== 6) {
+          if (shouldGetExtraRoll) {
+            // Player landed on extra roll square, they get another turn regardless of die result
+            console.log('Player landed on extra roll square, granting extra roll');
+            setShouldGetExtraRoll(false); // Reset the flag
+            // Don't auto-switch turn, let them roll again
+          } else if (result !== 6) {
             // Normal case: check if player has valid moves
             const hasMoves = hasValidMoves(result, currentTurnColor);
             console.log(`Current player check - hasMoves: ${hasMoves}, result: ${result}`);
@@ -715,7 +716,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   };
 
   // Helper function to handle path moves
-  const handlePathMove = async (playerColor: PlayerColor, discIndex: number, currentPathIndex: number, path: number[][]) => {
+  const handlePathMove = async (playerColor: PlayerColor, discIndex: number, currentPathIndex: number, path: [number, number][]) => {
     const colorData = getColorData(playerColor);
     if (!colorData) return;
 
@@ -805,61 +806,33 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   // Helper function to handle turn logic
   const handleTurnLogic = (playerColor: PlayerColor, finalPosition: [number, number]) => {
-    console.log(`=== HANDLE TURN LOGIC ===`);
-    console.log(`Player: ${playerColor}, Final Position: ${finalPosition}`);
-    console.log(`Current shouldGetExtraRoll: ${shouldGetExtraRoll}`);
-    console.log(`Is extra roll square: ${isExtraRollSquare(finalPosition)}`);
-    console.log(`Die result: ${dieResult}`);
-    
-    // First, check if the player landed on an extra roll square in THIS move
-    if (isExtraRollSquare(finalPosition)) {
+    // Check for extra roll after knocking opponent home
+    if (shouldGetExtraRoll) {
+      console.log(`${playerColor} player knocked opponent home, granting extra roll`);
+      setShouldGetExtraRoll(false); // Reset the flag
+      // Don't switch turn, let them roll again
+    } else if (isExtraRollSquare(finalPosition)) {
       console.log(`${playerColor} player landed on extra roll square, granting extra roll`);
       setShouldGetExtraRoll(true);
-      console.log(`shouldGetExtraRoll set to true for landing on extra roll square`);
     } else {
-      // Player did NOT land on an extra roll square
-      console.log(`${playerColor} player did NOT land on extra roll square`);
-      
-      // Check if they had an extra roll from a previous action (roll-again square or knocking opponent home)
-      if (shouldGetExtraRoll) {
-        console.log(`${playerColor} player had extra roll from previous action, using it up`);
-        setShouldGetExtraRoll(false); // Reset the flag
-        // After using up the extra roll, switch turn (unless they rolled a 6)
-        if (dieResult !== 6) {
-          const nextPlayer = getNextPlayer(playerColor);
-          console.log(`${playerColor} player used up extra roll, switching turn to ${nextPlayer} (not a 6)`);
-          setTimeout(() => {
-            if (switchTurn && gameId) {
-              console.log('Calling switchTurn function after using extra roll');
-              switchTurn(gameId).then(result => {
-                console.log('SwitchTurn result:', result);
-              }).catch(error => {
-                console.error('Error switching turn:', error);
-              });
-            }
-          }, 100); // Small delay to ensure animation is complete
-        } else {
-          console.log(`${playerColor} player used up extra roll but rolled a 6, keeping turn for another roll`);
-        }
+      // Reset the extra roll flag since player didn't land on an extra roll square
+      setShouldGetExtraRoll(false);
+      // Only switch turn if we didn't roll a 6 (6 gives another turn)
+      if (dieResult !== 6) {
+        const nextPlayer = getNextPlayer(playerColor);
+        console.log(`${playerColor} player move completed, switching turn to ${nextPlayer} (not a 6)`);
+        setTimeout(() => {
+          if (switchTurn && gameId) {
+            console.log('Calling switchTurn function');
+            switchTurn(gameId).then(result => {
+              console.log('SwitchTurn result:', result);
+            }).catch(error => {
+              console.error('Error switching turn:', error);
+            });
+          }
+        }, 100); // Small delay to ensure animation is complete
       } else {
-        // No extra roll conditions met, switch turn (unless they rolled a 6)
-        console.log(`${playerColor} player no extra roll conditions met, checking if turn should switch`);
-        if (dieResult !== 6) {
-          const nextPlayer = getNextPlayer(playerColor);
-          console.log(`${playerColor} player move completed, switching turn to ${nextPlayer} (not a 6)`);
-          setTimeout(() => {
-            if (switchTurn && gameId) {
-              console.log('Calling switchTurn function');
-              switchTurn(gameId).then(result => {
-                console.log('SwitchTurn result:', result);
-              }).catch(error => {
-                console.error('Error switching turn:', error);
-              });
-            }
-          }, 100); // Small delay to ensure animation is complete
-        } else {
-          console.log(`${playerColor} player rolled a 6, keeping turn for another roll`);
-        }
+        console.log(`${playerColor} player rolled a 6, keeping turn for another roll`);
       }
     }
   };
@@ -882,18 +855,6 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       console.log(`${playerColor} disc click blocked - dieResult:`, dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
       return;
     }
-
-    // Reset shouldGetExtraRoll at the start of each move to prevent stale values
-    console.log(`=== RESETTING EXTRA ROLL FLAG ===`);
-    console.log(`Resetting shouldGetExtraRoll at start of move (was: ${shouldGetExtraRoll})`);
-    setShouldGetExtraRoll(false);
-    console.log(`shouldGetExtraRoll reset to false at start of move`);
-    console.log(`=== END RESET ===`);
-    
-    // Force a state update to ensure the reset takes effect
-    setTimeout(() => {
-      console.log(`Verifying shouldGetExtraRoll reset: ${shouldGetExtraRoll}`);
-    }, 0);
 
     // Get color-specific data
     const colorData = getColorData(playerColor);
@@ -942,6 +903,627 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   const handleRedDiscClick = async (discIndex: number) => {
     await handleDiscClick(PlayerColor.RED, discIndex);
+  };
+
+  const handleGreenDiscClick = async (discIndex: number) => {
+    
+    console.log('Green disc clicked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+    if (!dieResult || currentTurnColor !== PlayerColor.GREEN || animatingDisc !== null) {
+      console.log('Green disc click blocked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+      return;
+    }
+    
+    const discPosition = greenDiscs[discIndex];
+    const isInStartingPosition = (discPosition[0] === 2 && (discPosition[1] === 11 || discPosition[1] === 12)) ||
+                                (discPosition[0] === 3 && (discPosition[1] === 11 || discPosition[1] === 12));
+    
+    // If disc is in starting position, it can only move on a 6
+    if (isInStartingPosition && dieResult !== 6) {
+      return;
+    }
+    
+    // If disc is in starting position and we rolled a 6, move to starting path position
+    if (isInStartingPosition && dieResult === 6) {
+      // Animate from starting position to [1, 8]
+      const animationSteps: [number, number][] = [[1, 8]];
+      setAnimatingDisc(discIndex);
+      setAnimationPath(animationSteps);
+      setAnimationIndex(0);
+      
+      // Play sound immediately when animation starts
+      Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      
+      const newDiscs = [...greenDiscs];
+      newDiscs[discIndex] = animationSteps[0];
+      setGreenDiscs(newDiscs);
+      
+      // Emit socket event for disc movement
+      if (moveDisc && gameId) {
+        moveDisc(gameId, PlayerColor.GREEN, discIndex, animationSteps[0]).catch(error => {
+          console.error('Error emitting disc movement:', error);
+        });
+      }
+      
+      // Play landing sound for starting position movement
+      if (isExtraRollSquare(animationSteps[0])) {
+        Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+      } else {
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      }
+      
+      setTimeout(() => {
+        setAnimatingDisc(null);
+        setAnimationPath([]);
+        setAnimationIndex(0);
+        setDieResult(null);
+        setMoveMade(true); // Mark that a move was made
+        setHasRolled(false); // Reset rolled state after move
+        
+        // Handle disc collision after movement
+        handleDiscCollision(animationSteps[0], PlayerColor.GREEN);
+        
+        // Check for victory FIRST - this should override all other logic
+        if (checkForWinner(PlayerColor.GREEN)) {
+          console.log('Green player has won!');
+          triggerVictory(PlayerColor.GREEN);
+          return; // Exit immediately - no more turns or extra rolls
+        }
+        
+        // Check for extra roll after knocking opponent home
+        if (shouldGetExtraRoll) {
+          console.log('Green player knocked opponent home, granting extra roll');
+          setShouldGetExtraRoll(false); // Reset the flag
+          // Don't switch turn, let them roll again
+        } else if (isExtraRollSquare(animationSteps[0])) {
+          console.log('Green player landed on extra roll square from starting position, granting extra roll');
+          setShouldGetExtraRoll(true);
+        } else {
+          // Only switch turn if we didn't roll a 6 (6 gives another turn)
+          if (dieResult !== 6) {
+            console.log('Green player move completed, switching turn to blue (not a 6)');
+            setTimeout(() => {
+              if (switchTurn && gameId) {
+                console.log('Calling switchTurn function');
+                switchTurn(gameId).then(result => {
+                  console.log('SwitchTurn result:', result);
+                }).catch(error => {
+                  console.error('Error switching turn:', error);
+                });
+              }
+            }, 100); // Small delay to ensure animation is complete
+          } else {
+            console.log('Green player rolled a 6, keeping turn for another roll');
+          }
+        }
+      }, 200);
+      return;
+    }
+    
+    // For discs already on the path, follow the exact path with animation
+    const currentPathIndex = greenPath.findIndex(([row, col]) => row === discPosition[0] && col === discPosition[1]);
+    
+    console.log('Green disc path movement - currentPathIndex:', currentPathIndex, 'discPosition:', discPosition);
+    
+    if (currentPathIndex !== -1) {
+      // Check if this move would go beyond the final square
+      const finalSquareIndex = greenPath.length - 1;
+      const distanceToFinal = finalSquareIndex - currentPathIndex;
+      
+      // If the die roll would go beyond the final square, the move is invalid
+      if (currentPathIndex + dieResult > finalSquareIndex) {
+        console.log('Green disc: Invalid move - would go beyond final square');
+        return;
+      }
+      
+      const newPathIndex = currentPathIndex + dieResult;
+      const animationSteps: [number, number][] = greenPath.slice(currentPathIndex + 1, newPathIndex + 1) as [number, number][];
+      
+      console.log('Green disc animation steps:', animationSteps);
+      
+      if (animationSteps.length > 0) {
+        setAnimatingDisc(discIndex);
+        setAnimationPath(animationSteps);
+        setAnimationIndex(0);
+        
+        console.log('Green disc - playing initial sound');
+        // Play sound immediately when animation starts
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+        
+        // Start animation
+        const animateStep = (stepIndex: number) => {
+          if (stepIndex < animationSteps.length) {
+            const newDiscs = [...greenDiscs];
+            newDiscs[discIndex] = animationSteps[stepIndex];
+            setGreenDiscs(newDiscs);
+            setAnimationIndex(stepIndex);
+            
+            // Emit socket event for disc movement (only on final position)
+            if (stepIndex === animationSteps.length - 1 && moveDisc && gameId) {
+              console.log('Emitting green disc movement to server');
+              moveDisc(gameId, PlayerColor.GREEN, discIndex, animationSteps[stepIndex]).catch(error => {
+                console.error('Error emitting disc movement:', error);
+              });
+            }
+            
+            // Play landing sound for each step (except the first one, which is handled by initial sound)
+            if (stepIndex > 0) {
+              console.log('Green disc - playing step sound for step:', stepIndex);
+              // Only play extra roll sound if this is the final position and it's an extra roll square
+              if (stepIndex === animationSteps.length - 1 && isExtraRollSquare(animationSteps[stepIndex])) {
+                Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+              } else if (stepIndex === animationSteps.length - 1) {
+                // Play regular sound for final position if it's not an extra roll square
+                Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+              }
+            }
+            
+            setTimeout(() => animateStep(stepIndex + 1), 175);
+          } else {
+            // Animation complete
+            setAnimatingDisc(null);
+            setAnimationPath([]);
+            setAnimationIndex(0);
+            setDieResult(null);
+            setMoveMade(true); // Mark that a move was made
+            setHasRolled(false); // Reset rolled state after move
+            
+            // Handle disc collision after movement
+            const finalPosition = animationSteps[animationSteps.length - 1];
+            handleDiscCollision(finalPosition, PlayerColor.GREEN);
+            
+            // Check for victory FIRST - this should override all other logic
+            if (checkForWinner(PlayerColor.GREEN)) {
+              console.log('Green player has won!');
+              triggerVictory(PlayerColor.GREEN);
+              return; // Exit immediately - no more turns or extra rolls
+            }
+            
+            // Check for extra roll after knocking opponent home
+            if (shouldGetExtraRoll) {
+              console.log('Green player knocked opponent home, granting extra roll');
+              setShouldGetExtraRoll(false); // Reset the flag
+              // Don't switch turn, let them roll again
+            } else if (isExtraRollSquare(finalPosition)) {
+              console.log('Green player landed on extra roll square, granting extra roll');
+              setShouldGetExtraRoll(true);
+            } else {
+              // Only switch turn if we didn't roll a 6 (6 gives another turn)
+              if (dieResult !== 6) {
+                console.log('Green player path move completed, switching turn to blue (not a 6)');
+                setTimeout(() => {
+                  if (switchTurn && gameId) {
+                    console.log('Calling switchTurn function');
+                    switchTurn(gameId).then(result => {
+                      console.log('SwitchTurn result:', result);
+                    }).catch(error => {
+                      console.error('Error switching turn:', error);
+                    });
+                  }
+                }, 100); // Small delay to ensure animation is complete
+              } else {
+                console.log('Green player rolled a 6, keeping turn for another roll');
+              }
+            }
+          }
+        };
+        
+        animateStep(0);
+      }
+    }
+  };
+
+  const handleYellowDiscClick = async (discIndex: number) => {
+    
+    console.log('Yellow disc clicked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+    if (!dieResult || currentTurnColor !== PlayerColor.YELLOW || animatingDisc !== null) {
+      console.log('Yellow disc click blocked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+      return;
+    }
+    
+    const discPosition = yellowDiscs[discIndex];
+    const isInStartingPosition = (discPosition[0] === 11 && (discPosition[1] === 11 || discPosition[1] === 12)) ||
+                                (discPosition[0] === 12 && (discPosition[1] === 11 || discPosition[1] === 12));
+    
+    // If disc is in starting position, it can only move on a 6
+    if (isInStartingPosition && dieResult !== 6) {
+      return;
+    }
+    
+    // If disc is in starting position and we rolled a 6, move to starting path position
+    if (isInStartingPosition && dieResult === 6) {
+      // Animate from starting position to [8, 13]
+      const animationSteps: [number, number][] = [[8, 13]];
+      setAnimatingDisc(discIndex);
+      setAnimationPath(animationSteps);
+      setAnimationIndex(0);
+      
+      // Play sound immediately when animation starts
+      Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      
+      const newDiscs = [...yellowDiscs];
+      newDiscs[discIndex] = animationSteps[0];
+      setYellowDiscs(newDiscs);
+      
+      // Emit socket event for disc movement
+      if (moveDisc && gameId) {
+        moveDisc(gameId, PlayerColor.YELLOW, discIndex, animationSteps[0]).catch(error => {
+          console.error('Error emitting disc movement:', error);
+        });
+      }
+      
+      // Play landing sound for starting position movement
+      if (isExtraRollSquare(animationSteps[0])) {
+        Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+      } else {
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      }
+      
+      setTimeout(() => {
+        setAnimatingDisc(null);
+        setAnimationPath([]);
+        setAnimationIndex(0);
+        setDieResult(null);
+        setMoveMade(true); // Mark that a move was made
+        setHasRolled(false); // Reset rolled state after move
+        
+        // Handle disc collision after movement
+        handleDiscCollision(animationSteps[0], PlayerColor.YELLOW);
+        
+        // Check for victory FIRST - this should override all other logic
+        if (checkForWinner(PlayerColor.YELLOW)) {
+          console.log('Yellow player has won!');
+          triggerVictory(PlayerColor.YELLOW);
+          return; // Exit immediately - no more turns or extra rolls
+        }
+        
+        // Check for extra roll after knocking opponent home
+        if (shouldGetExtraRoll) {
+          console.log('Yellow player knocked opponent home, granting extra roll');
+          setShouldGetExtraRoll(false); // Reset the flag
+          // Don't switch turn, let them roll again
+        } else if (isExtraRollSquare(animationSteps[0])) {
+          console.log('Yellow player landed on extra roll square from starting position, granting extra roll');
+          setShouldGetExtraRoll(true);
+        } else {
+          // Only switch turn if we didn't roll a 6 (6 gives another turn)
+          if (dieResult !== 6) {
+            console.log('Yellow player move completed, switching turn to green (not a 6)');
+            setTimeout(() => {
+              if (switchTurn && gameId) {
+                console.log('Calling switchTurn function');
+                switchTurn(gameId).then(result => {
+                  console.log('SwitchTurn result:', result);
+                }).catch(error => {
+                  console.error('Error switching turn:', error);
+                });
+              }
+            }, 100); // Small delay to ensure animation is complete
+          } else {
+            console.log('Yellow player rolled a 6, keeping turn for another roll');
+          }
+        }
+      }, 200);
+      return;
+    }
+    
+    // For discs already on the path, follow the exact path with animation
+    const currentPathIndex = yellowPath.findIndex(([row, col]) => row === discPosition[0] && col === discPosition[1]);
+    
+    console.log('Yellow disc path movement - currentPathIndex:', currentPathIndex, 'discPosition:', discPosition);
+    
+    if (currentPathIndex !== -1) {
+      // Check if this move would go beyond the final square
+      const finalSquareIndex = yellowPath.length - 1;
+      const distanceToFinal = finalSquareIndex - currentPathIndex;
+      
+      // If the die roll would go beyond the final square, the move is invalid
+      if (currentPathIndex + dieResult > finalSquareIndex) {
+        console.log('Yellow disc: Invalid move - would go beyond final square');
+        return;
+      }
+      
+      const newPathIndex = currentPathIndex + dieResult;
+      const animationSteps: [number, number][] = yellowPath.slice(currentPathIndex + 1, newPathIndex + 1) as [number, number][];
+      
+      console.log('Yellow disc animation steps:', animationSteps);
+      
+      if (animationSteps.length > 0) {
+        setAnimatingDisc(discIndex);
+        setAnimationPath(animationSteps);
+        setAnimationIndex(0);
+        
+        console.log('Yellow disc - playing initial sound');
+        // Play sound immediately when animation starts
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+        
+        // Start animation
+        const animateStep = (stepIndex: number) => {
+          if (stepIndex < animationSteps.length) {
+            const newDiscs = [...yellowDiscs];
+            newDiscs[discIndex] = animationSteps[stepIndex];
+            setYellowDiscs(newDiscs);
+            setAnimationIndex(stepIndex);
+            
+            // Emit socket event for disc movement (only on final position)
+            if (stepIndex === animationSteps.length - 1 && moveDisc && gameId) {
+              console.log('Emitting yellow disc movement to server');
+              moveDisc(gameId, PlayerColor.YELLOW, discIndex, animationSteps[stepIndex]).catch(error => {
+                console.error('Error emitting disc movement:', error);
+              });
+            }
+            
+            // Play landing sound for each step (except the first one, which is handled by initial sound)
+            if (stepIndex > 0) {
+              console.log('Yellow disc - playing step sound for step:', stepIndex);
+              // Only play extra roll sound if this is the final position and it's an extra roll square
+              if (stepIndex === animationSteps.length - 1 && isExtraRollSquare(animationSteps[stepIndex])) {
+                Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+              } else if (stepIndex === animationSteps.length - 1) {
+                // Play regular sound for final position if it's not an extra roll square
+                Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+              }
+            }
+            
+            setTimeout(() => animateStep(stepIndex + 1), 175);
+          } else {
+            // Animation complete
+            setAnimatingDisc(null);
+            setAnimationPath([]);
+            setAnimationIndex(0);
+            setDieResult(null);
+            setMoveMade(true); // Mark that a move was made
+            setHasRolled(false); // Reset rolled state after move
+            
+            // Handle disc collision after movement
+            const finalPosition = animationSteps[animationSteps.length - 1];
+            handleDiscCollision(finalPosition, PlayerColor.YELLOW);
+            
+            // Check for victory FIRST - this should override all other logic
+            if (checkForWinner(PlayerColor.YELLOW)) {
+              console.log('Yellow player has won!');
+              triggerVictory(PlayerColor.YELLOW);
+              return; // Exit immediately - no more turns or extra rolls
+            }
+            
+            // Check for extra roll after knocking opponent home
+            if (shouldGetExtraRoll) {
+              console.log('Yellow player knocked opponent home, granting extra roll');
+              setShouldGetExtraRoll(false); // Reset the flag
+              // Don't switch turn, let them roll again
+            } else if (isExtraRollSquare(finalPosition)) {
+              console.log('Yellow player landed on extra roll square, granting extra roll');
+              setShouldGetExtraRoll(true);
+            } else {
+              // Only switch turn if we didn't roll a 6 (6 gives another turn)
+              if (dieResult !== 6) {
+                console.log('Yellow player path move completed, switching turn to green (not a 6)');
+                setTimeout(() => {
+                  if (switchTurn && gameId) {
+                    console.log('Calling switchTurn function');
+                    switchTurn(gameId).then(result => {
+                      console.log('SwitchTurn result:', result);
+                    }).catch(error => {
+                      console.error('Error switching turn:', error);
+                    });
+                  }
+                }, 100); // Small delay to ensure animation is complete
+              } else {
+                console.log('Yellow player rolled a 6, keeping turn for another roll');
+              }
+            }
+          }
+        };
+        
+        animateStep(0);
+      }
+    }
+  };
+
+  const handleRedDiscClick = async (discIndex: number) => {
+    
+    console.log('Red disc clicked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+    if (!dieResult || currentTurnColor !== PlayerColor.RED || animatingDisc !== null) {
+      console.log('Red disc click blocked - dieResult:', dieResult, 'currentTurnColor:', currentTurnColor, 'animatingDisc:', animatingDisc);
+      return;
+    }
+    
+    const discPosition = redDiscs[discIndex];
+    const isInStartingPosition = (discPosition[0] === 2 && (discPosition[1] === 2 || discPosition[1] === 3)) ||
+                                (discPosition[0] === 3 && (discPosition[1] === 2 || discPosition[1] === 3));
+    
+    // If disc is in starting position, it can only move on a 6
+    if (isInStartingPosition && dieResult !== 6) {
+      return;
+    }
+    
+    // If disc is in starting position and we rolled a 6, move to starting path position
+    if (isInStartingPosition && dieResult === 6) {
+      // Animate from starting position to [2, 6]
+      const animationSteps: [number, number][] = [[2, 6]];
+      setAnimatingDisc(discIndex);
+      setAnimationPath(animationSteps);
+      setAnimationIndex(0);
+      
+      // Play sound immediately when animation starts
+      Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      
+      const newDiscs = [...redDiscs];
+      newDiscs[discIndex] = animationSteps[0];
+      setRedDiscs(newDiscs);
+      
+      // Emit socket event for disc movement
+      if (moveDisc && gameId) {
+        moveDisc(gameId, PlayerColor.RED, discIndex, animationSteps[0]).catch(error => {
+          console.error('Error emitting disc movement:', error);
+        });
+      }
+      
+      // Play landing sound for starting position movement
+      if (isExtraRollSquare(animationSteps[0])) {
+        Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+      } else {
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      }
+      
+      setTimeout(() => {
+        setAnimatingDisc(null);
+        setAnimationPath([]);
+        setAnimationIndex(0);
+        setDieResult(null);
+        setMoveMade(true); // Mark that a move was made
+        setHasRolled(false); // Reset rolled state after move
+        
+        // Handle disc collision after movement
+        handleDiscCollision(animationSteps[0], PlayerColor.RED);
+        
+        // Check for victory FIRST - this should override all other logic
+        if (checkForWinner(PlayerColor.RED)) {
+          console.log('Red player has won!');
+          triggerVictory(PlayerColor.RED);
+          return; // Exit immediately - no more turns or extra rolls
+        }
+        
+        // Check for extra roll after knocking opponent home
+        if (shouldGetExtraRoll) {
+          console.log('Red player knocked opponent home, granting extra roll');
+          setShouldGetExtraRoll(false); // Reset the flag
+          // Don't switch turn, let them roll again
+        } else if (isExtraRollSquare(animationSteps[0])) {
+          console.log('Red player landed on extra roll square from starting position, granting extra roll');
+          setShouldGetExtraRoll(true);
+        } else {
+          // Only switch turn if we didn't roll a 6 (6 gives another turn)
+          if (dieResult !== 6) {
+            console.log('Red player move completed, switching turn to yellow (not a 6)');
+            setTimeout(() => {
+              if (switchTurn && gameId) {
+                console.log('Calling switchTurn function');
+                switchTurn(gameId).then(result => {
+                  console.log('SwitchTurn result:', result);
+                }).catch(error => {
+                  console.error('Error switching turn:', error);
+                });
+              }
+            }, 100); // Small delay to ensure animation is complete
+          } else {
+            console.log('Red player rolled a 6, keeping turn for another roll');
+          }
+        }
+      }, 200);
+      return;
+    }
+    
+    // For discs already on the path, follow the exact path with animation
+    const currentPathIndex = redPath.findIndex(([row, col]) => row === discPosition[0] && col === discPosition[1]);
+    
+    console.log('Red disc path movement - currentPathIndex:', currentPathIndex, 'discPosition:', discPosition);
+    
+    if (currentPathIndex !== -1) {
+      // Check if this move would go beyond the final square
+      const finalSquareIndex = redPath.length - 1;
+      const distanceToFinal = finalSquareIndex - currentPathIndex;
+      
+      // If the die roll would go beyond the final square, the move is invalid
+      if (currentPathIndex + dieResult > finalSquareIndex) {
+        console.log('Red disc: Invalid move - would go beyond final square');
+        return;
+      }
+      
+      const newPathIndex = currentPathIndex + dieResult;
+      const animationSteps: [number, number][] = redPath.slice(currentPathIndex + 1, newPathIndex + 1) as [number, number][];
+      
+      console.log('Red disc animation steps:', animationSteps);
+      
+      if (animationSteps.length > 0) {
+        setAnimatingDisc(discIndex);
+        setAnimationPath(animationSteps);
+        setAnimationIndex(0);
+        
+        console.log('Red disc - playing initial sound');
+        // Play sound immediately when animation starts
+        Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+        
+        // Start animation
+        const animateStep = (stepIndex: number) => {
+          if (stepIndex < animationSteps.length) {
+            const newDiscs = [...redDiscs];
+            newDiscs[discIndex] = animationSteps[stepIndex];
+            setRedDiscs(newDiscs);
+            setAnimationIndex(stepIndex);
+            
+            // Emit socket event for disc movement (only on final position)
+            if (stepIndex === animationSteps.length - 1 && moveDisc && gameId) {
+              console.log('Emitting red disc movement to server');
+              moveDisc(gameId, PlayerColor.RED, discIndex, animationSteps[stepIndex]).catch(error => {
+                console.error('Error emitting disc movement:', error);
+              });
+            }
+            
+            // Play landing sound for each step (except the first one, which is handled by initial sound)
+            if (stepIndex > 0) {
+              console.log('Red disc - playing step sound for step:', stepIndex);
+              // Only play extra roll sound if this is the final position and it's an extra roll square
+              if (stepIndex === animationSteps.length - 1 && isExtraRollSquare(animationSteps[stepIndex])) {
+                Sounds.playExtraRollSound().catch(error => console.log('Error playing extra roll sound:', error));
+              } else if (stepIndex === animationSteps.length - 1) {
+                // Play regular sound for final position if it's not an extra roll square
+                Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+              }
+            }
+            
+            setTimeout(() => animateStep(stepIndex + 1), 175);
+          } else {
+            // Animation complete
+            setAnimatingDisc(null);
+            setAnimationPath([]);
+            setAnimationIndex(0);
+            setDieResult(null);
+            setMoveMade(true); // Mark that a move was made
+            setHasRolled(false); // Reset rolled state after move
+            
+            // Handle disc collision after movement
+            const finalPosition = animationSteps[animationSteps.length - 1];
+            handleDiscCollision(finalPosition, PlayerColor.RED);
+            
+            // Check for victory FIRST - this should override all other logic
+            if (checkForWinner(PlayerColor.RED)) {
+              console.log('Red player has won!');
+              triggerVictory(PlayerColor.RED);
+              return; // Exit immediately - no more turns or extra rolls
+            }
+            
+            // Check for extra roll after knocking opponent home
+            if (shouldGetExtraRoll) {
+              console.log('Red player knocked opponent home, granting extra roll');
+              setShouldGetExtraRoll(false); // Reset the flag
+              // Don't switch turn, let them roll again
+            } else if (isExtraRollSquare(finalPosition)) {
+              console.log('Red player landed on extra roll square, granting extra roll');
+              setShouldGetExtraRoll(true);
+            } else {
+              // Only switch turn if we didn't roll a 6 (6 gives another turn)
+              if (dieResult !== 6) {
+                console.log('Red player path move completed, switching turn to yellow (not a 6)');
+                setTimeout(() => {
+                  if (switchTurn && gameId) {
+                    console.log('Calling switchTurn function');
+                    switchTurn(gameId).then(result => {
+                      console.log('SwitchTurn result:', result);
+                    }).catch(error => {
+                      console.error('Error switching turn:', error);
+                    });
+                  }
+                }, 100); // Small delay to ensure animation is complete
+              } else {
+                console.log('Red player rolled a 6, keeping turn for another roll');
+              }
+            }
+          }
+        };
+        
+        animateStep(0);
+      }
+    }
   };
 
   // Check if a disc is in its home position
@@ -1065,13 +1647,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   // Helper function to handle disc collisions and send opponent discs back to home
   const handleDiscCollision = (landingPosition: [number, number], landingPlayerColor: PlayerColor): void => {
-    console.log(`=== HANDLE DISC COLLISION ===`);
-    console.log(`Landing position: ${landingPosition}, Landing player: ${landingPlayerColor}`);
-    console.log(`Is safe square: ${isSafeSquare(landingPosition)}`);
-    
     // Don't handle collisions on safe squares
     if (isSafeSquare(landingPosition)) {
-      console.log(`Position is safe square, no collision handling needed`);
       return;
     }
 
@@ -1108,9 +1685,6 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
     // Find opponent discs (discs of different colors)
     const opponentDiscs = allDiscsAtPosition.filter(disc => disc.color !== landingPlayerColor);
-    
-    console.log(`All discs at position: ${JSON.stringify(allDiscsAtPosition)}`);
-    console.log(`Opponent discs: ${JSON.stringify(opponentDiscs)}`);
     
     if (opponentDiscs.length > 0) {
       console.log(`Collision detected! ${landingPlayerColor} disc landed on ${opponentDiscs.length} opponent disc(s)`);
@@ -1421,19 +1995,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   };
 
   const renderExtraRollDie = () => {
-    return (
-      <div className="extra-roll-symbol">
-        <img 
-          src="/die-with-question-marks.png" 
-          alt="Roll again" 
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'contain' 
-          }} 
-        />
-      </div>
-    );
+    return <div className="extra-roll-symbol">🎲</div>;
   };
 
   // Helper function to group all discs by position (for mixed colors)
