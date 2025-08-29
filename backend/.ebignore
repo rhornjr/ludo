@@ -1,0 +1,8 @@
+node_modules/
+src/
+tsconfig.json
+nodemon.json
+*.log
+.git/
+.gitignore
+README.md
