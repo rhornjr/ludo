@@ -207,11 +207,15 @@ export const useSocket = () => {
 
     const handleGameStarted = ({ game }: { game: Game }) => {
       console.log('Game started:', game);
+      // Clear any pending die roll when game starts
+      setPendingDieRoll(null);
       debugSetCurrentGame(game);
     };
 
     const handleStarterSelectionStarted = ({ game }: { game: Game }) => {
       console.log('Starter selection started:', game);
+      // Clear any pending die roll when starter selection starts
+      setPendingDieRoll(null);
       debugSetCurrentGame(game);
     };
 

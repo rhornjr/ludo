@@ -31,6 +31,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const [hasRolled, setHasRolled] = useState(false);
   const [showDebugMode, setShowDebugMode] = useState(false);
   const [dieRollCallback, setDieRollCallbackState] = useState<((result: number) => void) | null>(null);
+  const [pulsatingDiscs, setPulsatingDiscs] = useState<Set<string>>(new Set());
 
   // Debug logging
   console.log('=== CURRENT TURN DEBUG ===');
@@ -73,6 +74,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   // Celebration state
   const [showVictory, setShowVictory] = useState(false);
   const [winnerColor, setWinnerColor] = useState<PlayerColor | null>(null);
+  
+  // Debug effect to track victory state changes
+  useEffect(() => {
+    console.log('Victory state changed - showVictory:', showVictory, 'winnerColor:', winnerColor);
+  }, [showVictory, winnerColor]);
   const [confetti, setConfetti] = useState<Array<{id: number, x: number, y: number, color: string, rotation: number, velocity: number}>>([]);
   const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
 
@@ -174,9 +180,52 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       setHasRolled(false);
       setIsRolling(false);
       setShouldGetExtraRoll(false);
+      setPulsatingDiscs(new Set()); // Clear pulsating discs on turn change
       console.log('shouldGetExtraRoll reset to false');
     }
   }, [currentTurnColor, localPlayerColor]);
+
+  // Effect to reset local state when game starts (for the first player)
+  useEffect(() => {
+    console.log('=== GAME STATE CHANGE DETECTED ===');
+    console.log('Game state:', currentGame?.gameState);
+    console.log('Current turn color:', currentTurnColor);
+    console.log('Local player color:', localPlayerColor);
+    console.log('Is local player turn:', localPlayerColor === currentTurnColor);
+    
+    // Reset local state when game transitions to PLAYING and it's the local player's turn
+    if (currentGame?.gameState === 'PLAYING' && localPlayerColor === currentTurnColor) {
+      console.log('Game just started and it\'s local player\'s turn - resetting local state');
+      setDieResult(null);
+      setMoveMade(false);
+      setHasRolled(false);
+      setIsRolling(false);
+      setShouldGetExtraRoll(false);
+      setPulsatingDiscs(new Set()); // Clear pulsating discs on game start
+      console.log('Local state reset for game start');
+    }
+  }, [currentGame?.gameState, currentTurnColor, localPlayerColor]);
+
+  // Additional effect to reset state when game starts (for all players)
+  useEffect(() => {
+    if (currentGame?.gameState === 'PLAYING') {
+      console.log('=== GAME STARTED - RESETTING ALL PLAYER STATE ===');
+      console.log('Resetting state for all players when game starts');
+      setDieResult(null);
+      setMoveMade(false);
+      setHasRolled(false);
+      setIsRolling(false);
+      setShouldGetExtraRoll(false);
+      setPulsatingDiscs(new Set()); // Clear pulsating discs on game start
+      // Clear any pending die roll to prevent it from being processed
+      if (pendingDieRoll) {
+        console.log('Clearing pending die roll on game start');
+        // We can't directly clear pendingDieRoll as it's passed as a prop,
+        // but we can ensure our local state is clean
+      }
+      console.log('All player state reset for game start');
+    }
+  }, [currentGame?.gameState, pendingDieRoll]);
 
   // Simple effect to clear die result when turn switches
   useEffect(() => {
@@ -302,6 +351,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 
                 // Handle disc collision after movement for other players
                 handleDiscCollision(newPosition, playerColor);
+                
+                // Check for victory for other players' moves
+                if (checkForWinner(playerColor)) {
+                  console.log(`${playerColor} player has won!`);
+                  triggerVictory(playerColor);
+                  return; // Exit immediately - no more processing
+                }
               }
             };
             
@@ -337,6 +393,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       
       // Handle disc collision after immediate movement
       handleDiscCollision(newPosition, playerColor);
+      
+      // Check for victory for other players' immediate movements
+      if (checkForWinner(playerColor)) {
+        console.log(`${playerColor} player has won!`);
+        triggerVictory(playerColor);
+        return; // Exit immediately - no more processing
+      }
       
       // Play sound for immediate movement
       if (isExtraRollSquare(newPosition)) {
@@ -484,7 +547,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Bottom row
     [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5],
     // Path
-    [6, 1], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]
+    [6, 1], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5]
   ];
 
   const greenSquares = [
@@ -495,7 +558,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Bottom row
     [5, 9], [5, 10], [5, 11], [5, 12], [5, 13], [5, 14],
     // Path
-    [1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [1, 8], [6, 7]
+    [1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [1, 8]
   ];
 
   const blueSquares = [
@@ -506,7 +569,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Bottom row
     [14, 0], [14, 1], [14, 2], [14, 3], [14, 4], [14, 5],
     // Path
-    [13, 6], [13, 7], [9, 7], [10, 7], [11, 7], [12, 7], [8, 7]
+    [13, 6], [13, 7], [9, 7], [10, 7], [11, 7], [12, 7]
   ];
 
   const yellowSquares = [
@@ -517,7 +580,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Bottom row
     [14, 9], [14, 10], [14, 11], [14, 12], [14, 13], [14, 14],
     // Path
-    [7, 9], [7, 10], [7, 11], [7, 12], [7, 13], [8, 13], [7, 8]
+    [7, 9], [7, 10], [7, 11], [7, 12], [7, 13], [8, 13]
   ];
 
   const graySquares = [
@@ -615,6 +678,12 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     
     // Black path
     ...Object.fromEntries(graySquares.map(([row, col]) => [`${row},${col}`, 'board-cell black-path'])),
+    
+    // Final squares with colored borders
+    '7,6': 'board-cell final-square-red',
+    '6,7': 'board-cell final-square-green', 
+    '7,8': 'board-cell final-square-yellow',
+    '8,7': 'board-cell final-square-blue',
   };
 
   const getCellClass = (row: number, col: number) => {
@@ -627,8 +696,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                       yellowPath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col) ||
                       redPath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col);
     
-    // Add path-cell class if it's a path square, regardless of whether it's also a corner square
-    return isPathCell ? `${baseClass} path-cell` : baseClass;
+    // Don't add path-cell class to final squares to avoid border conflicts
+    const isFinalSquare = (row === 7 && col === 6) || (row === 6 && col === 7) || 
+                         (row === 7 && col === 8) || (row === 8 && col === 7);
+    
+    // Add path-cell class if it's a path square but not a final square
+    const pathClass = (isPathCell && !isFinalSquare) ? ' path-cell' : '';
+    return `${baseClass}${pathClass}`;
   };
 
   const getDieColor = (playerColor?: PlayerColor) => {
@@ -727,7 +801,30 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       handleDiscCollision(animationSteps[0], playerColor);
       
       // Check for victory FIRST - this should override all other logic
-      if (checkForWinner(playerColor)) {
+      // Use the final position to check if this move resulted in a win
+      const finalPosition = animationSteps[0];
+      console.log(`Checking for victory after starting position move to ${finalPosition}`);
+      
+      // Create a temporary disc array with the updated position
+      const tempDiscs = [...discs];
+      tempDiscs[discIndex] = finalPosition;
+      
+      // Check if all discs are in the final square
+      let finalSquare: [number, number];
+      switch (playerColor) {
+        case PlayerColor.BLUE: finalSquare = [8, 7]; break;
+        case PlayerColor.GREEN: finalSquare = [6, 7]; break;
+        case PlayerColor.YELLOW: finalSquare = [7, 8]; break;
+        case PlayerColor.RED: finalSquare = [7, 6]; break;
+        default: finalSquare = [0, 0];
+      }
+      
+      const hasWon = tempDiscs.every(disc => disc[0] === finalSquare[0] && disc[1] === finalSquare[1]);
+      console.log(`Temporary discs:`, tempDiscs);
+      console.log(`Final square:`, finalSquare);
+      console.log(`Has won:`, hasWon);
+      
+      if (hasWon) {
         console.log(`${playerColor} player has won!`);
         triggerVictory(playerColor);
         return; // Exit immediately - no more turns or extra rolls
@@ -812,7 +909,30 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           handleDiscCollision(finalPosition, playerColor);
           
           // Check for victory FIRST - this should override all other logic
-          if (checkForWinner(playerColor)) {
+          // Use the final position to check if this move resulted in a win
+          const winCheckPosition = animationSteps[animationSteps.length - 1];
+          console.log(`Checking for victory after path move to ${winCheckPosition}`);
+          
+          // Create a temporary disc array with the updated position
+          const tempDiscs = [...discs];
+          tempDiscs[discIndex] = finalPosition;
+          
+          // Check if all discs are in the final square
+          let finalSquare: [number, number];
+          switch (playerColor) {
+            case PlayerColor.BLUE: finalSquare = [8, 7]; break;
+            case PlayerColor.GREEN: finalSquare = [6, 7]; break;
+            case PlayerColor.YELLOW: finalSquare = [7, 8]; break;
+            case PlayerColor.RED: finalSquare = [7, 6]; break;
+            default: finalSquare = [0, 0];
+          }
+          
+          const hasWon = tempDiscs.every(disc => disc[0] === finalSquare[0] && disc[1] === finalSquare[1]);
+          console.log(`Temporary discs:`, tempDiscs);
+          console.log(`Final square:`, finalSquare);
+          console.log(`Has won:`, hasWon);
+          
+          if (hasWon) {
             console.log(`${playerColor} player has won!`);
             triggerVictory(playerColor);
             return; // Exit immediately - no more turns or extra rolls
@@ -907,6 +1027,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return;
     }
 
+    // Stop pulsating for this disc immediately when clicked
+    stopPulsating(playerColor, discIndex);
+
     // Don't reset shouldGetExtraRoll here - let collision detection handle it
     console.log(`=== DISC CLICK - shouldGetExtraRoll state: ${shouldGetExtraRoll} ===`);
 
@@ -978,6 +1101,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   // Helper function to generate confetti
   const generateConfetti = () => {
+    console.log('Generating confetti...');
     const colors = ['#ff6b6b', '#51cf66', '#339af0', '#ffd43b', '#ff922b', '#be4bdb'];
     const newConfetti = [];
     
@@ -992,6 +1116,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       });
     }
     
+    console.log('Setting confetti with', newConfetti.length, 'pieces');
     setConfetti(newConfetti);
   };
 
@@ -1021,12 +1146,21 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         return false;
     }
     
+    // Debug logging for winner check
+    console.log(`=== WINNER CHECK FOR ${playerColor} ===`);
+    console.log('Discs:', discs);
+    console.log('Final square:', finalSquare);
+    console.log('All discs in final square:', discs.every(disc => disc[0] === finalSquare[0] && disc[1] === finalSquare[1]));
+    
     // Check if all 4 discs are in the final square
     return discs.every(disc => disc[0] === finalSquare[0] && disc[1] === finalSquare[1]);
   };
 
   // Helper function to trigger victory celebration
   const triggerVictory = (winnerColor: PlayerColor) => {
+    console.log(`=== TRIGGERING VICTORY FOR ${winnerColor} ===`);
+    console.log('Setting winner color:', winnerColor);
+    console.log('Setting showVictory to true');
     setWinnerColor(winnerColor);
     setShowVictory(true);
     generateConfetti();
@@ -1039,10 +1173,14 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     })();
     
     // Hide victory message after 5 seconds
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
+      console.log('Hiding victory message after 5 seconds');
       setShowVictory(false);
       setConfetti([]);
     }, 5000);
+    
+    // Store timeout ID for potential clearing
+    console.log('Victory timeout set with ID:', timeoutId);
   };
 
   // Helper function to test celebration
@@ -1295,7 +1433,95 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     return false;
   };
 
+  // Function to determine which specific discs can be moved
+  const getMovableDiscs = (dieValue: number, playerColor: PlayerColor): number[] => {
+    if (!dieValue) return [];
+    
+    // Get the current player's discs and path
+    let currentDiscs: [number, number][];
+    let path: number[][];
+    
+    if (playerColor === PlayerColor.BLUE) {
+      currentDiscs = blueDiscs;
+      path = bluePath;
+    } else if (playerColor === PlayerColor.GREEN) {
+      currentDiscs = greenDiscs;
+      path = greenPath;
+    } else if (playerColor === PlayerColor.YELLOW) {
+      currentDiscs = yellowDiscs;
+      path = yellowPath;
+    } else if (playerColor === PlayerColor.RED) {
+      currentDiscs = redDiscs;
+      path = redPath;
+    } else {
+      return [];
+    }
+    
+    const movableDiscs: number[] = [];
+    
+    for (let i = 0; i < currentDiscs.length; i++) {
+      const disc = currentDiscs[i];
+      const inHome = isInHome(disc, playerColor);
+      
+      if (inHome) {
+        // Disc is in home - can only move out with a 6
+        if (dieValue === 6) {
+          movableDiscs.push(i);
+        }
+      } else {
+        // Disc is on the path - check if it can move without going past the final square
+        const currentPathIndex = path.findIndex(([row, col]) => row === disc[0] && col === disc[1]);
+        
+        if (currentPathIndex !== -1) {
+          // Check if moving by dieValue would go beyond the final square
+          const finalSquareIndex = path.length - 1;
+          if (currentPathIndex + dieValue <= finalSquareIndex) {
+            movableDiscs.push(i);
+          }
+        }
+      }
+    }
+    
+    return movableDiscs;
+  };
 
+  // Effect to update pulsating discs when die result changes
+  useEffect(() => {
+    // Clear pulsating discs when turn changes (dieResult might be from previous turn)
+    if (currentTurnColor !== localPlayerColor) {
+      setPulsatingDiscs(new Set());
+      return;
+    }
+    
+    // Only show pulsating discs if:
+    // 1. There's a die result (player has rolled)
+    // 2. It's the current player's turn
+    // 3. It's the local player's turn
+    // 4. The player hasn't made a move yet (moveMade is false)
+    // 5. The die result is for the current turn (not from a previous turn)
+    if (dieResult && currentTurnColor === localPlayerColor && !moveMade && hasRolled) {
+      const movableDiscs = getMovableDiscs(dieResult, currentTurnColor);
+      const newPulsatingDiscs = new Set<string>();
+      
+      movableDiscs.forEach(discIndex => {
+        newPulsatingDiscs.add(`${currentTurnColor}-${discIndex}`);
+      });
+      
+      setPulsatingDiscs(newPulsatingDiscs);
+      console.log(`Setting pulsating discs for ${currentTurnColor}:`, Array.from(newPulsatingDiscs));
+    } else {
+      setPulsatingDiscs(new Set());
+    }
+  }, [dieResult, currentTurnColor, localPlayerColor, moveMade, hasRolled, blueDiscs, greenDiscs, yellowDiscs, redDiscs]);
+
+  // Function to stop pulsating for a specific disc
+  const stopPulsating = (playerColor: PlayerColor, discIndex: number) => {
+    setPulsatingDiscs(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(`${playerColor}-${discIndex}`);
+      return newSet;
+    });
+  };
 
   // Function to instantly move a knocked disc to home
   const moveKnockedDiscToHome = (
@@ -1536,14 +1762,22 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           const offsetX = stackIndex * 2; // 2px horizontal offset
           const offsetY = stackIndex * 2; // 2px vertical offset
           
+          // Check if this disc should pulsate
+          const shouldPulsate = pulsatingDiscs.has(`${color}-${discIndex}`);
+          
           return (
             <div
               key={`${color}-disc-${discIndex}`}
-              className={`${color.toLowerCase()}-disc stacked-disc`}
-              onClick={() => onClickHandler(discIndex)}
+              className={`${color.toLowerCase()}-disc stacked-disc ${shouldPulsate ? 'pulsating-disc' : ''}`}
+              onClick={() => {
+                if (shouldPulsate) {
+                  stopPulsating(color, discIndex);
+                }
+                onClickHandler(discIndex);
+              }}
               style={{
                 cursor: dieResult && currentTurnColor === color ? 'pointer' : 'default',
-                zIndex: zIndex,
+                zIndex: shouldPulsate ? 200 : zIndex, // Higher z-index for pulsating discs
                 position: 'absolute',
                 transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
                 transition: 'transform 0.2s ease',
@@ -1664,19 +1898,38 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           >
             Show Celebration
           </button>
+
+
           <button
-            className="test-sound-btn"
-            onClick={async () => {
-              try {
-                await Sounds.playSadSound();
-              } catch (error) {
-                console.log('Error playing sad sound:', error);
+            className="test-win-btn"
+            onClick={() => {
+              // Force all discs to final position for testing
+              const finalDiscs = [[8, 7], [8, 7], [8, 7], [8, 7]] as [number, number][];
+              setBlueDiscs(finalDiscs);
+              console.log('Forced blue discs to final position for testing');
+              
+              // Check win condition directly with the new positions
+              const finalSquare: [number, number] = [8, 7];
+              const hasWon = finalDiscs.every(disc => disc[0] === finalSquare[0] && disc[1] === finalSquare[1]);
+              console.log('Final discs:', finalDiscs);
+              console.log('Final square:', finalSquare);
+              console.log('Has won:', hasWon);
+              
+              if (hasWon) {
+                console.log('Blue should win now - triggering victory');
+                triggerVictory(PlayerColor.BLUE);
+              } else {
+                console.log('Blue did not win - something is wrong with the check');
               }
             }}
-            title="Test the sad sound (plays when knocking opponent discs)"
+            title="Force blue player to win for testing"
           >
-            Test Sad Sound
+            Force Blue Win
           </button>
+
+
+
+
         </div>
       )}
       <div className="board-wrapper">
@@ -1684,7 +1937,35 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           {Array.from({ length: 15 }, (_, row) => (
             <div key={row} className="board-row">
               {Array.from({ length: 15 }, (_, col) => (
-              <div key={col} className={getCellClass(row, col)} data-row={row} data-col={col}>
+              <div 
+                key={col} 
+                className={getCellClass(row, col)} 
+                data-row={row} 
+                data-col={col}
+                style={{
+                  // Final squares with colored borders using outline
+                  ...(row === 7 && col === 6 && { 
+                    backgroundColor: 'white',
+                    outline: '3px solid #ff6b6b',
+                    outlineOffset: '-3px'
+                  }), // Red final square
+                  ...(row === 6 && col === 7 && { 
+                    backgroundColor: 'white',
+                    outline: '3px solid #51cf66',
+                    outlineOffset: '-3px'
+                  }), // Green final square
+                  ...(row === 7 && col === 8 && { 
+                    backgroundColor: 'white',
+                    outline: '3px solid #ffd43b',
+                    outlineOffset: '-3px'
+                  }), // Yellow final square
+                  ...(row === 8 && col === 7 && { 
+                    backgroundColor: 'white',
+                    outline: '3px solid #339af0',
+                    outlineOffset: '-3px'
+                  }), // Blue final square
+                }}
+              >
                 {showCoordinates && (
                   <span className="coordinate-label">
                     {row},{col}
@@ -1814,6 +2095,18 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           const isLocalPlayer = player.color === localPlayerColor;
           const canRoll = isCurrentTurn && isLocalPlayer && !isRolling && !(hasRolled && !moveMade);
           
+          // Debug logging for the first player's die
+          if (isLocalPlayer && isCurrentTurn) {
+            console.log(`=== DIE ROLL DEBUG FOR ${player.color.toUpperCase()} ===`);
+            console.log('isCurrentTurn:', isCurrentTurn);
+            console.log('isLocalPlayer:', isLocalPlayer);
+            console.log('isRolling:', isRolling);
+            console.log('hasRolled:', hasRolled);
+            console.log('moveMade:', moveMade);
+            console.log('canRoll:', canRoll);
+            console.log('Game state:', currentGame?.gameState);
+          }
+          
           // Position dice next to their name pills consistently
           let diePosition = {};
           if (player.color === 'red') {
@@ -1918,9 +2211,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         </div>
       )}
 
-      {/* Victory Celebration */}
+      {/* Victory Celebration - Always show if showVictory is true */}
       {showVictory && (
-        <div className="victory-overlay">
+        <div className="victory-overlay" style={{ zIndex: 9999 }}>
           <div 
             className="victory-message"
             style={{
@@ -1934,6 +2227,30 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             <h1 className="victory-title">
               🎉 {winnerColor?.toUpperCase()} WINS! 🎉
             </h1>
+            <p style={{ marginTop: '10px', fontSize: '18px' }}>
+              Game State: {currentGame?.gameState || 'unknown'}
+            </p>
+            <button
+              className="close-victory-btn"
+              onClick={() => {
+                console.log('Manual close button clicked');
+                setShowVictory(false);
+                setConfetti([]);
+              }}
+              style={{
+                marginTop: '20px',
+                padding: '10px 20px',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: '2px solid white',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

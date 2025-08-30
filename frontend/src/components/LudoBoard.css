@@ -98,6 +98,18 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.test-win-btn {
+  background: linear-gradient(135deg, #339af0 0%, #1c7ed6 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -107,6 +119,131 @@
 }
 
 .test-sound-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-win-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.test-win-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.debug-discs-btn {
+  background: linear-gradient(135deg, #20c997 0%, #12b886 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.debug-discs-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.debug-discs-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clear-victory-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clear-victory-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.clear-victory-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-check-winner-btn {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-check-winner-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.test-check-winner-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-trigger-victory-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-trigger-victory-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.test-trigger-victory-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-overlay-btn {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.test-overlay-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.test-overlay-btn:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -208,6 +345,43 @@
 .black-path {
   background: #000;
   border: 1px solid #333;
+}
+
+/* Final square borders for each player's path - with maximum specificity */
+.board-cell[data-row="7"][data-col="6"].final-square-red,
+.board-cell[data-row="7"][data-col="6"].path-cell.final-square-red {
+  border: 3px solid #ff6b6b !important;
+  border-top: 3px solid #ff6b6b !important;
+  border-right: 3px solid #ff6b6b !important;
+  border-bottom: 3px solid #ff6b6b !important;
+  border-left: 3px solid #ff6b6b !important;
+}
+
+.board-cell[data-row="6"][data-col="7"].final-square-green,
+.board-cell[data-row="6"][data-col="7"].path-cell.final-square-green {
+  border: 3px solid #51cf66 !important;
+  border-top: 3px solid #51cf66 !important;
+  border-right: 3px solid #51cf66 !important;
+  border-bottom: 3px solid #51cf66 !important;
+  border-left: 3px solid #51cf66 !important;
+}
+
+.board-cell[data-row="7"][data-col="8"].final-square-yellow,
+.board-cell[data-row="7"][data-col="8"].path-cell.final-square-yellow {
+  border: 3px solid #ffd43b !important;
+  border-top: 3px solid #ffd43b !important;
+  border-right: 3px solid #ffd43b !important;
+  border-bottom: 3px solid #ffd43b !important;
+  border-left: 3px solid #ffd43b !important;
+}
+
+.board-cell[data-row="8"][data-col="7"].final-square-blue,
+.board-cell[data-row="8"][data-col="7"].path-cell.final-square-blue {
+  border: 3px solid #339af0 !important;
+  border-top: 3px solid #339af0 !important;
+  border-right: 3px solid #339af0 !important;
+  border-bottom: 3px solid #339af0 !important;
+  border-left: 3px solid #339af0 !important;
 }
 
 .center-outline {
@@ -1005,4 +1179,142 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Pulsating Disc Animation */
+@keyframes discPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.7), 0 0 45px rgba(255, 255, 255, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+    border: 4px solid rgba(255, 255, 255, 1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 0 50px rgba(255, 255, 255, 0.9), 0 0 75px rgba(255, 255, 255, 0.7);
+    filter: brightness(1.6) drop-shadow(0 0 20px rgba(255, 255, 255, 1));
+    border: 5px solid rgba(255, 255, 255, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.7), 0 0 45px rgba(255, 255, 255, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+    border: 4px solid rgba(255, 255, 255, 1);
+  }
+}
+
+/* Color-specific pulsating animations */
+@keyframes discPulseBlue {
+  0% {
+    box-shadow: 0 0 15px rgba(51, 154, 240, 0.9), 0 0 30px rgba(51, 154, 240, 0.7), 0 0 45px rgba(51, 154, 240, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(51, 154, 240, 0.9));
+    border: 4px solid rgba(51, 154, 240, 1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(51, 154, 240, 1), 0 0 50px rgba(51, 154, 240, 0.9), 0 0 75px rgba(51, 154, 240, 0.7);
+    filter: brightness(1.6) drop-shadow(0 0 20px rgba(51, 154, 240, 1));
+    border: 5px solid rgba(51, 154, 240, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(51, 154, 240, 0.9), 0 0 30px rgba(51, 154, 240, 0.7), 0 0 45px rgba(51, 154, 240, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(51, 154, 240, 0.9));
+    border: 4px solid rgba(51, 154, 240, 1);
+  }
+}
+
+@keyframes discPulseGreen {
+  0% {
+    box-shadow: 0 0 15px rgba(81, 207, 102, 0.9), 0 0 30px rgba(81, 207, 102, 0.7), 0 0 45px rgba(81, 207, 102, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(81, 207, 102, 0.9));
+    border: 4px solid rgba(81, 207, 102, 1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(81, 207, 102, 1), 0 0 50px rgba(81, 207, 102, 0.9), 0 0 75px rgba(81, 207, 102, 0.7);
+    filter: brightness(1.6) drop-shadow(0 0 20px rgba(81, 207, 102, 1));
+    border: 5px solid rgba(81, 207, 102, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(81, 207, 102, 0.9), 0 0 30px rgba(81, 207, 102, 0.7), 0 0 45px rgba(81, 207, 102, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(81, 207, 102, 0.9));
+    border: 4px solid rgba(81, 207, 102, 1);
+  }
+}
+
+@keyframes discPulseYellow {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 212, 59, 0.9), 0 0 30px rgba(255, 212, 59, 0.7), 0 0 45px rgba(255, 212, 59, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 212, 59, 0.9));
+    border: 4px solid rgba(255, 212, 59, 1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 212, 59, 1), 0 0 50px rgba(255, 212, 59, 0.9), 0 0 75px rgba(255, 212, 59, 0.7);
+    filter: brightness(1.6) drop-shadow(0 0 20px rgba(255, 212, 59, 1));
+    border: 5px solid rgba(255, 212, 59, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 212, 59, 0.9), 0 0 30px rgba(255, 212, 59, 0.7), 0 0 45px rgba(255, 212, 59, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 212, 59, 0.9));
+    border: 4px solid rgba(255, 212, 59, 1);
+  }
+}
+
+@keyframes discPulseRed {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.9), 0 0 30px rgba(255, 107, 107, 0.7), 0 0 45px rgba(255, 107, 107, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 107, 107, 0.9));
+    border: 4px solid rgba(255, 107, 107, 1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 107, 107, 1), 0 0 50px rgba(255, 107, 107, 0.9), 0 0 75px rgba(255, 107, 107, 0.7);
+    filter: brightness(1.6) drop-shadow(0 0 20px rgba(255, 107, 107, 1));
+    border: 5px solid rgba(255, 107, 107, 1);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.9), 0 0 30px rgba(255, 107, 107, 0.7), 0 0 45px rgba(255, 107, 107, 0.5);
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(255, 107, 107, 0.9));
+    border: 4px solid rgba(255, 107, 107, 1);
+  }
+}
+
+.pulsating-disc {
+  animation: discPulse 0.8s ease-in-out infinite !important;
+  border: 4px solid rgba(255, 255, 255, 1) !important;
+  z-index: 200 !important; /* Ensure pulsating discs appear on top */
+}
+
+/* Color-specific pulsating classes */
+.pulsating-disc.blue-disc {
+  animation: discPulseBlue 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.green-disc {
+  animation: discPulseGreen 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.yellow-disc {
+  animation: discPulseYellow 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.red-disc {
+  animation: discPulseRed 0.8s ease-in-out infinite !important;
+}
+
+/* Ensure pulsating discs maintain their stacking offset */
+.pulsating-disc.stacked-disc {
+  animation: discPulse 0.8s ease-in-out infinite !important;
+  z-index: 200 !important;
+}
+
+/* Color-specific stacked pulsating discs */
+.pulsating-disc.stacked-disc.blue-disc {
+  animation: discPulseBlue 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.stacked-disc.green-disc {
+  animation: discPulseGreen 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.stacked-disc.yellow-disc {
+  animation: discPulseYellow 0.8s ease-in-out infinite !important;
+}
+
+.pulsating-disc.stacked-disc.red-disc {
+  animation: discPulseRed 0.8s ease-in-out infinite !important;
 }
