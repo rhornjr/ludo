@@ -86,7 +86,7 @@ export const StarterSelection: React.FC<StarterSelectionProps> = ({ players, onS
   return (
     <div className="starter-selection">
       <div className="selection-container">
-        Random Starter</h2>
+        <h2>Random Starter</h2>
         <div className="spinning-container">
           <div className={`spinning-player ${getColorClass(players[currentColorIndex]?.color)}`}>
             <div className="player-avatar"></div>
