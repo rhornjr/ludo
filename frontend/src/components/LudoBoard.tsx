@@ -1391,18 +1391,25 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const hasValidMoves = (dieValue: number, playerColor: PlayerColor): boolean => {
     if (!dieValue) return false;
     
-    // Get the current player's discs
+    // Get the current player's discs and path
     let currentDiscs: [number, number][];
+    let path: number[][];
+    
     if (playerColor === PlayerColor.BLUE) {
       currentDiscs = blueDiscs;
+      path = bluePath;
     } else if (playerColor === PlayerColor.GREEN) {
       currentDiscs = greenDiscs;
+      path = greenPath;
     } else if (playerColor === PlayerColor.YELLOW) {
       currentDiscs = yellowDiscs;
+      path = yellowPath;
     } else if (playerColor === PlayerColor.RED) {
       currentDiscs = redDiscs;
+      path = redPath;
     } else {
       currentDiscs = [];
+      path = [];
     }
     
     console.log(`hasValidMoves called for ${playerColor}, dieValue: ${dieValue}, discs:`, currentDiscs);
@@ -1421,14 +1428,23 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           return true; // Can move out of home
         }
       } else {
-        // Disc is on the path, can always move (we'll add more validation later)
-        console.log(`Disc ${i} is on path, can move`);
-        return true;
+        // Disc is on the path - check if it can move without going past the final square
+        const currentPathIndex = path.findIndex(([row, col]) => row === disc[0] && col === disc[1]);
+        
+        if (currentPathIndex !== -1) {
+          // Check if moving by dieValue would go beyond the final square
+          const finalSquareIndex = path.length - 1;
+          if (currentPathIndex + dieValue <= finalSquareIndex) {
+            console.log(`Disc ${i} is on path, can move`);
+            return true;
+          } else {
+            console.log(`Disc ${i} is on path but would go beyond final square`);
+          }
+        }
       }
     }
     
-    // If we get here, all discs are in home and we didn't roll a 6
-    // In this case, the player cannot move, so return false
+    // If we get here, no discs can move
     console.log(`No valid moves for ${playerColor}`);
     return false;
   };
