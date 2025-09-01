@@ -59,14 +59,17 @@ export class GameManager {
 
     // Create player with provided color or first available color as temporary
     let finalColor: PlayerColor;
+    let hasChosenColor: boolean;
     if (playerColor) {
       finalColor = playerColor;
+      hasChosenColor = true;
       console.log(`Player ${playerName} joining with specified color: ${playerColor}`);
     } else {
       // Find first available color for temporary assignment
       const usedColors = game.players.map(p => p.color);
       const allColors = [PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
       finalColor = allColors.find(color => !usedColors.includes(color)) || PlayerColor.RED;
+      hasChosenColor = false;
       console.log(`Player ${playerName} joining without color, assigned temporary color: ${finalColor}`);
       console.log(`Used colors in game: ${usedColors.join(', ')}`);
     }
@@ -76,7 +79,8 @@ export class GameManager {
       name: playerName,
       color: finalColor,
       pawns: this.createPawns(),
-      isReady: false
+      isReady: false,
+      hasChosenColor: hasChosenColor
     };
 
     game.players.push(player);
@@ -135,6 +139,7 @@ export class GameManager {
 
     console.log(`Updating player ${player.name} color from ${player.color} to ${playerColor}`);
     player.color = playerColor;
+    player.hasChosenColor = true;
 
     // Notify all players in the game about the color change
     this.io.to(gameId).emit('playerColorChanged', { player, game: this.serializeGameForSocket(game) });
@@ -333,6 +338,12 @@ export class GameManager {
 
     if (game.players.length < 2) {
       return { success: false, error: 'Need at least 2 players to start the game' };
+    }
+
+    // Check if all players have chosen their colors
+    const allPlayersHaveChosenColors = game.players.every(player => player.hasChosenColor);
+    if (!allPlayersHaveChosenColors) {
+      return { success: false, error: 'All players must choose their colors before starting the game' };
     }
 
     // Enter the selecting starter state

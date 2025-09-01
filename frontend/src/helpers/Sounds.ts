@@ -82,23 +82,46 @@ export class Sounds {
   // Play dice rolling sound
   static async playDiceRollSound(): Promise<void> {
     try {
-      const ctx = await this.getAudioContext();
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
+      // Try HTML5 Audio first (better for Safari)
+      const audio = new Audio('/rolling-dice-1.wav');
+      audio.volume = 0.6; // Set volume to 60%
       
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
+      // For Firefox compatibility, ensure audio is loaded before playing
+      audio.preload = 'auto';
       
-      oscillator.frequency.setValueAtTime(200, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.5);
-      
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-      
-      oscillator.start(ctx.currentTime);
-      oscillator.stop(ctx.currentTime + 0.5);
+      try {
+        await audio.play();
+        return; // Success with HTML5 Audio
+      } catch (html5Error) {
+        console.log('HTML5 Audio failed, falling back to Web Audio API:', html5Error);
+        // Fall back to Web Audio API for Firefox
+        throw html5Error;
+      }
     } catch (error) {
-      console.log('Audio not supported or blocked by browser');
+      try {
+        // Fallback to Web Audio API (better for Firefox)
+        console.log('Using Web Audio API fallback for dice roll sound');
+        const ctx = await this.getAudioContext();
+        
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        // Create a dice rolling sound effect
+        oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(400, ctx.currentTime + 0.1);
+        oscillator.frequency.linearRampToValueAtTime(200, ctx.currentTime + 0.2);
+        
+        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.2);
+      } catch (fallbackError) {
+        console.log('Both audio methods failed:', fallbackError);
+      }
     }
   }
 

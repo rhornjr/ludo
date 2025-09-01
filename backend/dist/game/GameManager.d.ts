@@ -30,6 +30,10 @@ export declare class GameManager {
         game?: Game;
         error?: string;
     };
+    playerWon(gameId: string, playerColor: PlayerColor): {
+        success: boolean;
+        error?: string;
+    };
     private createBoard;
     private createPawns;
     private serializeGameForSocket;

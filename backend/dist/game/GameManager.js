@@ -51,21 +51,28 @@ class GameManager {
         }
         // Create player with provided color or first available color as temporary
         let finalColor;
+        let hasChosenColor;
         if (playerColor) {
             finalColor = playerColor;
+            hasChosenColor = true;
+            console.log(`Player ${playerName} joining with specified color: ${playerColor}`);
         }
         else {
             // Find first available color for temporary assignment
             const usedColors = game.players.map(p => p.color);
             const allColors = [game_1.PlayerColor.RED, game_1.PlayerColor.GREEN, game_1.PlayerColor.BLUE, game_1.PlayerColor.YELLOW];
             finalColor = allColors.find(color => !usedColors.includes(color)) || game_1.PlayerColor.RED;
+            hasChosenColor = false;
+            console.log(`Player ${playerName} joining without color, assigned temporary color: ${finalColor}`);
+            console.log(`Used colors in game: ${usedColors.join(', ')}`);
         }
         const player = {
             id: playerId,
             name: playerName,
             color: finalColor,
             pawns: this.createPawns(),
-            isReady: false
+            isReady: false,
+            hasChosenColor: hasChosenColor
         };
         game.players.push(player);
         this.playerToGame.set(playerId, gameId);
@@ -84,19 +91,37 @@ class GameManager {
         if (!game) {
             return { success: false, error: 'Game not found' };
         }
+        console.log(`=== ASSIGN COLOR DEBUG ===`);
+        console.log(`Game ID: ${gameId}, Player ID: ${playerId}, Requested Color: ${playerColor}`);
+        console.log(`Current players in game:`, game.players.map(p => ({ id: p.id, name: p.name, color: p.color })));
         // Check if the requested color is available (excluding the current player)
+        console.log(`Checking if color ${playerColor} is taken by other players...`);
+        const playersWithSameColor = game.players.filter(p => p.color === playerColor);
+        console.log(`Players with color ${playerColor}:`, playersWithSameColor.map(p => ({ id: p.id, name: p.name })));
+        // Find the current player to check if they're trying to assign their own current color
+        const currentPlayer = game.players.find(p => p.id === playerId);
+        const isAssigningOwnColor = currentPlayer && currentPlayer.color === playerColor;
         const isColorTaken = game.players.some(p => p.color === playerColor && p.id !== playerId);
+        console.log(`Is color taken by other player: ${isColorTaken}`);
+        console.log(`Is player assigning their own current color: ${isAssigningOwnColor}`);
+        console.log(`Current player ID: ${playerId}`);
+        console.log(`Players with same color but different ID:`, game.players.filter(p => p.color === playerColor && p.id !== playerId).map(p => ({ id: p.id, name: p.name })));
         if (isColorTaken) {
+            console.log(`Color ${playerColor} is already taken by another player`);
             return { success: false, error: `Color ${playerColor} is already taken` };
         }
         // Find the player and update their color
         const player = game.players.find(p => p.id === playerId);
         if (!player) {
+            console.log(`Player with ID ${playerId} not found in game`);
             return { success: false, error: 'Player not found' };
         }
+        console.log(`Updating player ${player.name} color from ${player.color} to ${playerColor}`);
         player.color = playerColor;
+        player.hasChosenColor = true;
         // Notify all players in the game about the color change
         this.io.to(gameId).emit('playerColorChanged', { player, game: this.serializeGameForSocket(game) });
+        console.log(`Color assignment successful`);
         return { success: true, gameId, game: this.serializeGameForSocket(game) };
     }
     getAvailableColors(gameId, excludePlayerId) {
@@ -104,16 +129,29 @@ class GameManager {
         if (!game) {
             return { success: false, error: 'Game not found' };
         }
+        console.log(`=== GET AVAILABLE COLORS DEBUG ===`);
+        console.log(`Game ID: ${gameId}, Exclude Player ID: ${excludePlayerId}`);
+        console.log(`All players in game:`, game.players.map(p => ({ id: p.id, name: p.name, color: p.color })));
         let usedColors = game.players.map(p => p.color);
+        console.log(`Used colors before exclusion: ${usedColors.join(', ')}`);
         // If excluding a specific player, remove their color from used colors
         if (excludePlayerId) {
             const excludePlayer = game.players.find(p => p.id === excludePlayerId);
             if (excludePlayer) {
+                console.log(`Excluding player ${excludePlayer.name} with color ${excludePlayer.color}`);
                 usedColors = usedColors.filter(color => color !== excludePlayer.color);
+                console.log(`Used colors after exclusion: ${usedColors.join(', ')}`);
             }
+            else {
+                console.log(`Player with ID ${excludePlayerId} not found for exclusion`);
+            }
+        }
+        else {
+            console.log(`No player ID provided for exclusion - this might be the issue!`);
         }
         const allColors = [game_1.PlayerColor.RED, game_1.PlayerColor.GREEN, game_1.PlayerColor.BLUE, game_1.PlayerColor.YELLOW];
         const availableColors = allColors.filter(color => !usedColors.includes(color));
+        console.log(`Available colors: ${availableColors.join(', ')}`);
         return { success: true, availableColors };
     }
     handlePlayerDisconnect(playerId) {
@@ -157,6 +195,14 @@ class GameManager {
             return { success: false, error: 'Game not found' };
         }
         console.log('Switching turn in game:', gameId, 'from player index:', game.currentPlayerIndex);
+        console.log('Current dice value:', game.diceValue);
+        // If the current player rolled a 6, they should get another turn
+        if (game.diceValue === 6) {
+            console.log('Player rolled a 6, keeping turn for another roll');
+            // Reset dice value but keep the same player
+            game.diceValue = 0;
+            return { success: true, game: this.serializeGameForSocket(game) };
+        }
         // Switch to the next player
         game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
         game.diceValue = 0; // Reset die value
@@ -182,6 +228,16 @@ class GameManager {
             console.log('Updated pawn position for player:', playerColor, 'disc:', discIndex, 'to:', player.pawns[discIndex].position);
         }
         return { success: true, game };
+    }
+    playerWon(gameId, playerColor) {
+        const game = this.games.get(gameId);
+        if (!game) {
+            return { success: false, error: 'Game not found' };
+        }
+        console.log('Player won event received for game:', gameId, 'player:', playerColor);
+        // Broadcast the victory to all players in the game
+        this.io.to(gameId).emit('playerWon', { playerColor });
+        return { success: true };
     }
     createBoard() {
         // This is a simplified board structure
@@ -221,6 +277,11 @@ class GameManager {
         }
         if (game.players.length < 2) {
             return { success: false, error: 'Need at least 2 players to start the game' };
+        }
+        // Check if all players have chosen their colors
+        const allPlayersHaveChosenColors = game.players.every(player => player.hasChosenColor);
+        if (!allPlayersHaveChosenColors) {
+            return { success: false, error: 'All players must choose their colors before starting the game' };
         }
         // Enter the selecting starter state
         game.gameState = game_1.GameState.SELECTING_STARTER;

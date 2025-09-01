@@ -139,9 +139,15 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     }
     
     // Prevent rolling if player has already rolled and hasn't made a move yet
-    if (hasRolled && !moveMade) {
-      console.log('Die click blocked - already rolled, waiting for move');
+    // EXCEPT when they rolled a 6 - they always get to roll again
+    if (hasRolled && !moveMade && dieResult !== 6) {
+      console.log('Die click blocked - already rolled, waiting for move (not a 6)');
       return;
+    }
+    
+    // If player rolled a 6, they can always roll again
+    if (hasRolled && !moveMade && dieResult === 6) {
+      console.log('Player rolled a 6, allowing them to roll again');
     }
     
     // Don't reset shouldGetExtraRoll here - let collision detection handle it
@@ -527,23 +533,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               }, 2000); // Give 2 seconds for the player to see the result
             }
           } else if (result === 6) {
-            // Player rolled a 6, check if they have valid moves
-            const hasMoves = hasValidMoves(result, currentTurnColor);
-            console.log(`Player rolled a 6 - hasMoves: ${hasMoves}`);
-            if (!hasMoves) {
-              console.log('Player rolled a 6 but no valid moves available, auto-switching turn');
-              setTimeout(() => {
-                setDieResult(null);
-                setHasRolled(false); // Reset rolled state when turn switches
-                if (switchTurn && gameId) {
-                  switchTurn(gameId).catch(error => {
-                    console.error('Error switching turn:', error);
-                  });
-                }
-              }, 2000); // Give 2 seconds for the player to see the result
-            } else {
-              console.log('Player rolled a 6 and has valid moves, waiting for them to make a move');
-            }
+            // Player rolled a 6 - they always get to roll again, regardless of valid moves
+            console.log('Player rolled a 6 - they get to roll again (regardless of valid moves)');
+            // Don't switch turn - player keeps their turn for another roll
+            // If they have valid moves, they can make a move first, then roll again
+            // If they don't have valid moves, they just roll again
           }
         }
       }, 1000); // Animation delay
@@ -827,7 +821,14 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       setAnimationIndex(0);
       setDieResult(null);
       setMoveMade(true); // Mark that a move was made
-      setHasRolled(false); // Reset rolled state after move
+      
+      // If player rolled a 6, they get to roll again, so don't reset hasRolled
+      // If they didn't roll a 6, reset hasRolled so they can't roll again
+      if (dieResult !== 6) {
+        setHasRolled(false); // Reset rolled state after move (not a 6)
+      } else {
+        console.log('Player rolled a 6, keeping hasRolled true so they can roll again');
+      }
       
       // Handle disc collision after movement
       handleDiscCollision(animationSteps[0], playerColor);
@@ -934,7 +935,14 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           setDieResult(null);
           console.log('Move completed, setting moveMade to true');
           setMoveMade(true); // Mark that a move was made
-          setHasRolled(false); // Reset rolled state after move
+          
+          // If player rolled a 6, they get to roll again, so don't reset hasRolled
+          // If they didn't roll a 6, reset hasRolled so they can't roll again
+          if (dieResult !== 6) {
+            setHasRolled(false); // Reset rolled state after move (not a 6)
+          } else {
+            console.log('Player rolled a 6, keeping hasRolled true so they can roll again');
+          }
           
           // Handle disc collision after movement
           const finalPosition = animationSteps[animationSteps.length - 1];
@@ -1429,60 +1437,55 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     }
   };
 
+  // Helper function to get player-specific data (discs and path)
+  const getPlayerData = (playerColor: PlayerColor): { discs: [number, number][], path: number[][] } => {
+    if (playerColor === PlayerColor.BLUE) {
+      return { discs: blueDiscs, path: bluePath };
+    } else if (playerColor === PlayerColor.GREEN) {
+      return { discs: greenDiscs, path: greenPath };
+    } else if (playerColor === PlayerColor.YELLOW) {
+      return { discs: yellowDiscs, path: yellowPath };
+    } else if (playerColor === PlayerColor.RED) {
+      return { discs: redDiscs, path: redPath };
+    } else {
+      return { discs: [], path: [] };
+    }
+  };
+
+  // Helper function to check if a specific disc can move
+  const canDiscMove = (disc: [number, number], discIndex: number, dieValue: number, playerColor: PlayerColor, path: number[][]): boolean => {
+    const inHome = isInHome(disc, playerColor);
+    
+    if (inHome) {
+      // If disc is in home, it can only move out with a 6
+      return dieValue === 6;
+    } else {
+      // Disc is on the path - check if it can move without going past the final square
+      const currentPathIndex = path.findIndex(([row, col]) => row === disc[0] && col === disc[1]);
+      
+      if (currentPathIndex !== -1) {
+        // Check if moving by dieValue would go beyond the final square
+        const finalSquareIndex = path.length - 1;
+        return currentPathIndex + dieValue <= finalSquareIndex;
+      }
+    }
+    
+    return false;
+  };
+
   // Check if the current player has any valid moves available
   const hasValidMoves = (dieValue: number, playerColor: PlayerColor): boolean => {
     if (!dieValue) return false;
     
-    // Get the current player's discs and path
-    let currentDiscs: [number, number][];
-    let path: number[][];
+    const { discs, path } = getPlayerData(playerColor);
     
-    if (playerColor === PlayerColor.BLUE) {
-      currentDiscs = blueDiscs;
-      path = bluePath;
-    } else if (playerColor === PlayerColor.GREEN) {
-      currentDiscs = greenDiscs;
-      path = greenPath;
-    } else if (playerColor === PlayerColor.YELLOW) {
-      currentDiscs = yellowDiscs;
-      path = yellowPath;
-    } else if (playerColor === PlayerColor.RED) {
-      currentDiscs = redDiscs;
-      path = redPath;
-    } else {
-      currentDiscs = [];
-      path = [];
-    }
-    
-    console.log(`hasValidMoves called for ${playerColor}, dieValue: ${dieValue}, discs:`, currentDiscs);
+    console.log(`hasValidMoves called for ${playerColor}, dieValue: ${dieValue}, discs:`, discs);
     
     // Check if any disc can move
-    for (let i = 0; i < currentDiscs.length; i++) {
-      const disc = currentDiscs[i];
-      const inHome = isInHome(disc, playerColor);
-      
-      console.log(`Disc ${i} at ${disc}, inHome: ${inHome}`);
-      
-      // If disc is in home, it can only move out with a 6
-      if (inHome) {
-        if (dieValue === 6) {
-          console.log(`Disc ${i} can move out of home with 6`);
-          return true; // Can move out of home
-        }
-      } else {
-        // Disc is on the path - check if it can move without going past the final square
-        const currentPathIndex = path.findIndex(([row, col]) => row === disc[0] && col === disc[1]);
-        
-        if (currentPathIndex !== -1) {
-          // Check if moving by dieValue would go beyond the final square
-          const finalSquareIndex = path.length - 1;
-          if (currentPathIndex + dieValue <= finalSquareIndex) {
-            console.log(`Disc ${i} is on path, can move`);
-            return true;
-          } else {
-            console.log(`Disc ${i} is on path but would go beyond final square`);
-          }
-        }
+    for (let i = 0; i < discs.length; i++) {
+      if (canDiscMove(discs[i], i, dieValue, playerColor, path)) {
+        console.log(`Disc ${i} can move`);
+        return true;
       }
     }
     
@@ -1495,48 +1498,12 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const getMovableDiscs = (dieValue: number, playerColor: PlayerColor): number[] => {
     if (!dieValue) return [];
     
-    // Get the current player's discs and path
-    let currentDiscs: [number, number][];
-    let path: number[][];
-    
-    if (playerColor === PlayerColor.BLUE) {
-      currentDiscs = blueDiscs;
-      path = bluePath;
-    } else if (playerColor === PlayerColor.GREEN) {
-      currentDiscs = greenDiscs;
-      path = greenPath;
-    } else if (playerColor === PlayerColor.YELLOW) {
-      currentDiscs = yellowDiscs;
-      path = yellowPath;
-    } else if (playerColor === PlayerColor.RED) {
-      currentDiscs = redDiscs;
-      path = redPath;
-    } else {
-      return [];
-    }
-    
+    const { discs, path } = getPlayerData(playerColor);
     const movableDiscs: number[] = [];
     
-    for (let i = 0; i < currentDiscs.length; i++) {
-      const disc = currentDiscs[i];
-      const inHome = isInHome(disc, playerColor);
-      
-      if (inHome) {
-        // Disc is in home - can only move out with a 6
-        if (dieValue === 6) {
-          movableDiscs.push(i);
-        }
-      } else {
-        // Disc is on the path - check if it can move without going past the final square
-        const currentPathIndex = path.findIndex(([row, col]) => row === disc[0] && col === disc[1]);
-        
-        if (currentPathIndex !== -1) {
-          // Check if moving by dieValue would go beyond the final square
-          const finalSquareIndex = path.length - 1;
-          if (currentPathIndex + dieValue <= finalSquareIndex) {
-            movableDiscs.push(i);
-          }
-        }
+    for (let i = 0; i < discs.length; i++) {
+      if (canDiscMove(discs[i], i, dieValue, playerColor, path)) {
+        movableDiscs.push(i);
       }
     }
     
@@ -1648,7 +1615,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     await new Promise(resolve => setTimeout(resolve, 10));
     
     // Play dice rolling sound
-    await Sounds.playDiceRollSound();
+    Sounds.playDiceRollSound(); // don't await because we want the sound to overlap with the rolling animation below.
     
     try {
       console.log('Rolling die - socketRollDie:', !!socketRollDie, 'gameId:', gameId);
@@ -1913,6 +1880,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                     console.log('Die click blocked - already rolled, waiting for move');
                     return;
                   }
+                  
+                  // Play dice rolling sound
+                  Sounds.playDiceRollSound();
                   
                   // Set the forced roll number
                   setForcedRollNumber(number);
@@ -2259,8 +2229,50 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       {currentGame?.gameState === GameState.WAITING && currentGame?.players && currentGame.players.length === 1 && (
         <div className="start-game-overlay">
           <div className="start-game-container">
+            <button 
+              className="close-dialog-btn"
+              onClick={() => {
+                // Close the dialog by going back to lobby
+                window.location.reload(); // Simple approach - reload to go back to lobby
+              }}
+              title="Close"
+            >
+              ✕
+            </button>
             <h2>Waiting for Players</h2>
             <p>Share the Game ID with other players to join!</p>
+            {gameId && (
+              <div className="game-id-display">
+                <span className="game-id-label">Game ID:</span>
+                <span className="game-id-value">{gameId}</span>
+                <button 
+                  className="copy-game-id-btn"
+                  onClick={() => {
+                    navigator.clipboard.writeText(gameId);
+                    // Show a brief "Copied!" message
+                    const btn = document.querySelector('.copy-game-id-btn') as HTMLButtonElement;
+                    if (btn) {
+                      const originalSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2v1"></path>
+                      </svg>`;
+                      btn.innerHTML = '✓';
+                      btn.style.color = '#51cf66';
+                      setTimeout(() => {
+                        btn.innerHTML = originalSVG;
+                        btn.style.color = 'white';
+                      }, 2000);
+                    }
+                  }}
+                  title="Copy Game ID"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
+            )}
             <div className="waiting-players">
               <div className="current-players">
                 <h3>Current Players:</h3>
@@ -2286,9 +2298,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               <div className="current-players">
                 <h3>Players:</h3>
                 {currentGame.players.map((player: any, index: number) => (
-                  <div key={player.id} className={`player-item ${player.color}`}>
+                  <div key={player.id} className={`player-item ${player.hasChosenColor ? player.color : 'pick'}`}>
                     <span className="player-name">{player.name}</span>
-                    <span className="player-color-badge">{player.color}</span>
+                    <span className={`player-color-badge ${player.hasChosenColor ? player.color : 'pick'}`}>
+                      {player.hasChosenColor ? player.color.toUpperCase() : 'PICK'}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -2296,9 +2310,15 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             <button 
               className="start-game-button"
               onClick={handleStartGame}
+              disabled={!currentGame.players.every((player: any) => player.hasChosenColor)}
             >
               🎲 Start Game
             </button>
+            {!currentGame.players.every((player: any) => player.hasChosenColor) && (
+              <p className="waiting-message">
+                Waiting for all players to choose their colors...
+              </p>
+            )}
           </div>
         </div>
       )}
