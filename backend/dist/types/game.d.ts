@@ -5,6 +5,7 @@ export interface Player {
     pawns: Pawn[];
     isReady: boolean;
     hasChosenColor: boolean;
+    hasFirstRolled: boolean;
 }
 export interface Pawn {
     id: number;

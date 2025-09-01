@@ -145,14 +145,14 @@ export const useSocket = () => {
     });
   };
 
-  const rollDie = (gameId: string): Promise<{ success: boolean; result?: number; error?: string }> => {
+  const rollDie = (gameId: string, forcedRoll?: number): Promise<{ success: boolean; result?: number; error?: string }> => {
     return new Promise((resolve, reject) => {
       if (!socket) {
         reject(new Error('Socket not connected'));
         return;
       }
 
-      socket.emit('rollDie', { gameId }, (response: { success: boolean; result?: number; error?: string }) => {
+      socket.emit('rollDie', { gameId, forcedRoll }, (response: { success: boolean; result?: number; error?: string }) => {
         resolve(response);
       });
     });

@@ -9,7 +9,7 @@ interface LudoBoardProps {
   onPawnClick?: (playerColor: PlayerColor, pawnId: number) => void;
   onDieRoll?: (result: number) => void;
   gameId?: string;
-  socketRollDie?: (gameId: string) => Promise<{ success: boolean; result?: number; error?: string }>;
+  socketRollDie?: (gameId: string, forcedRoll?: number) => Promise<{ success: boolean; result?: number; error?: string }>;
   switchTurn?: (gameId: string) => Promise<{ success: boolean }>;
   moveDisc?: (gameId: string, playerColor: PlayerColor, discIndex: number, newPosition: [number, number]) => Promise<{ success: boolean }>;
   playerWon?: (gameId: string, playerColor: PlayerColor) => Promise<{ success: boolean }>;
@@ -1623,7 +1623,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       // Use socket rolling if available, otherwise fallback to local
       if (socketRollDie && gameId) {
         console.log('Using socket rolling');
-        const response = await socketRollDie(gameId);
+        const response = await socketRollDie(gameId, forcedRollNumber || undefined);
         const result = response.result;
         console.log('Socket die result:', result);
         

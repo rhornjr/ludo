@@ -15,7 +15,7 @@ export declare class GameManager {
         error?: string;
     };
     handlePlayerDisconnect(playerId: string): void;
-    rollDie(gameId: string, playerId: string): {
+    rollDie(gameId: string, playerId: string, forcedRoll?: number): {
         success: boolean;
         result?: number;
         error?: string;

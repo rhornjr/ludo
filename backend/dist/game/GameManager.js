@@ -72,7 +72,8 @@ class GameManager {
             color: finalColor,
             pawns: this.createPawns(),
             isReady: false,
-            hasChosenColor: hasChosenColor
+            hasChosenColor: hasChosenColor,
+            hasFirstRolled: false
         };
         game.players.push(player);
         this.playerToGame.set(playerId, gameId);
@@ -174,13 +175,34 @@ class GameManager {
             this.io.to(gameId).emit('playerLeft', { playerId, game: this.serializeGameForSocket(game) });
         }
     }
-    rollDie(gameId, playerId) {
+    rollDie(gameId, playerId, forcedRoll) {
         const game = this.games.get(gameId);
         if (!game) {
             return { success: false, error: 'Game not found' };
         }
-        // Generate a random die result (1-6)
-        const dieResult = Math.floor(Math.random() * 6) + 1;
+        // Find the current player
+        const currentPlayer = game.players[game.currentPlayerIndex];
+        if (!currentPlayer) {
+            return { success: false, error: 'Current player not found' };
+        }
+        let dieResult;
+        // Check if a forced roll is requested (debug override)
+        if (forcedRoll !== undefined && forcedRoll >= 1 && forcedRoll <= 6) {
+            dieResult = forcedRoll;
+            console.log(`Forced roll for player ${currentPlayer.name} (${currentPlayer.color}) - debug override result: ${dieResult}`);
+        }
+        // Check if this is the first roll for the current player
+        else if (!currentPlayer.hasFirstRolled) {
+            // First roll should always be 6
+            dieResult = 6;
+            currentPlayer.hasFirstRolled = true;
+            console.log(`First roll for player ${currentPlayer.name} (${currentPlayer.color}) - forcing result to 6`);
+        }
+        else {
+            // Generate a random die result (1-6) for subsequent rolls
+            dieResult = Math.floor(Math.random() * 6) + 1;
+            console.log(`Regular roll for player ${currentPlayer.name} (${currentPlayer.color}) - random result: ${dieResult}`);
+        }
         game.diceValue = dieResult;
         // Lock the game on the first roll
         if (!game.gameLocked) {
@@ -265,6 +287,10 @@ class GameManager {
             return;
         game.gameState = game_1.GameState.PLAYING;
         game.currentPlayerIndex = 0;
+        // Reset first roll state for all players when starting a new game
+        game.players.forEach(player => {
+            player.hasFirstRolled = false;
+        });
         this.io.to(gameId).emit('gameStarted', { game: this.serializeGameForSocket(game) });
     }
     startGameWithRandomSelection(gameId) {

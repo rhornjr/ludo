@@ -51,9 +51,9 @@ io.on('connection', (socket) => {
         const result = gameManager.startGameWithRandomSelection(gameId);
         callback(result);
     });
-    socket.on('rollDie', async ({ gameId }, callback) => {
-        console.log('Roll die request received for game:', gameId, 'from socket:', socket.id);
-        const result = gameManager.rollDie(gameId, socket.id);
+    socket.on('rollDie', async ({ gameId, forcedRoll }, callback) => {
+        console.log('Roll die request received for game:', gameId, 'from socket:', socket.id, 'forcedRoll:', forcedRoll);
+        const result = gameManager.rollDie(gameId, socket.id, forcedRoll);
         if (result.success) {
             console.log('Broadcasting die roll result:', result.result, 'to game:', gameId);
             // Get all sockets in the game room
