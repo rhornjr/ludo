@@ -20,7 +20,7 @@
 }
 
 .error {
-  color: #ff6b6b;
+  color: #ff9500;
   font-weight: bold;
 }
 
@@ -101,8 +101,8 @@
   font-weight: bold;
 }
 
-.player-color.red {
-  background: #ff6b6b;
+.player-color.orange {
+  background: #ff9500;
 }
 
 .player-color.green {

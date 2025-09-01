@@ -22,7 +22,7 @@ export const ColorSelection: React.FC<ColorSelectionProps> = ({
         <p>Welcome, {playerName}! Pick your color to start playing.</p>
         
         <div className="color-grid">
-          {[PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW].map((color) => {
+          {[PlayerColor.ORANGE, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW].map((color) => {
             const isAvailable = availableColors.includes(color);
             const isTaken = !isAvailable;
             
@@ -33,7 +33,7 @@ export const ColorSelection: React.FC<ColorSelectionProps> = ({
                 onClick={() => isAvailable && onColorSelect(color)}
                 disabled={isTaken}
                 style={{
-                  backgroundColor: color === 'red' ? '#ff6b6b' : 
+                  backgroundColor: color === 'orange' ? '#ff9500' : 
                                  color === 'green' ? '#51cf66' : 
                                  color === 'blue' ? '#339af0' : '#ffd43b',
                   color: color === 'yellow' ? '#333' : 'white',

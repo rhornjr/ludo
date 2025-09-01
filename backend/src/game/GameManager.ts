@@ -67,8 +67,8 @@ export class GameManager {
     } else {
       // Find first available color for temporary assignment
       const usedColors = game.players.map(p => p.color);
-      const allColors = [PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
-      finalColor = allColors.find(color => !usedColors.includes(color)) || PlayerColor.RED;
+      const allColors = [PlayerColor.ORANGE, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
+      finalColor = allColors.find(color => !usedColors.includes(color)) || PlayerColor.ORANGE;
       hasChosenColor = false;
       console.log(`Player ${playerName} joining without color, assigned temporary color: ${finalColor}`);
       console.log(`Used colors in game: ${usedColors.join(', ')}`);
@@ -176,7 +176,7 @@ export class GameManager {
       console.log(`No player ID provided for exclusion - this might be the issue!`);
     }
     
-    const allColors = [PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
+    const allColors = [PlayerColor.ORANGE, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW];
     const availableColors = allColors.filter(color => !usedColors.includes(color));
     console.log(`Available colors: ${availableColors.join(', ')}`);
 

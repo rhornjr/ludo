@@ -48,7 +48,7 @@ export interface HomeArea {
 }
 
 export enum PlayerColor {
-  RED = 'red',
+  ORANGE = 'orange',
   GREEN = 'green',
   BLUE = 'blue',
   YELLOW = 'yellow'

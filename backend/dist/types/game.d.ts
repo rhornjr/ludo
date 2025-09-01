@@ -41,7 +41,7 @@ export interface HomeArea {
     positions: Position[];
 }
 export declare enum PlayerColor {
-    RED = "red",
+    ORANGE = "orange",
     GREEN = "green",
     BLUE = "blue",
     YELLOW = "yellow"

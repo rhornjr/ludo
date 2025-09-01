@@ -60,8 +60,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     [11, 11], [11, 12], [12, 11], [12, 12] // Starting positions
   ]);
 
-   // Red disc positions: [row, col]
-   const [redDiscs, setRedDiscs] = useState<[number, number][]>([
+   // Orange disc positions: [row, col]
+   const [orangeDiscs, setOrangeDiscs] = useState<[number, number][]>([
     [2, 2], [2, 3], [3, 2], [3, 3] // Starting positions
   ]);
   
@@ -299,9 +299,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         } else if (playerColor === PlayerColor.YELLOW) {
           currentDiscs = yellowDiscs;
           path = yellowPath;
-        } else if (playerColor === PlayerColor.RED) {
-          currentDiscs = redDiscs;
-          path = redPath;
+          } else if (playerColor === PlayerColor.ORANGE) {
+    currentDiscs = orangeDiscs;
+    path = orangePath;
         } else {
           return; // Unknown player color
         }
@@ -345,8 +345,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                     newDiscs[discIndex] = animationSteps[stepIndex];
                     return newDiscs;
                   });
-                } else if (playerColor === PlayerColor.RED) {
-                  setRedDiscs(prev => {
+                } else if (playerColor === PlayerColor.ORANGE) {
+                  setOrangeDiscs(prev => {
                     const newDiscs = [...prev];
                     newDiscs[discIndex] = animationSteps[stepIndex];
                     return newDiscs;
@@ -406,8 +406,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           newDiscs[discIndex] = newPosition;
           return newDiscs;
         });
-      } else if (playerColor === PlayerColor.RED) {
-        setRedDiscs(prev => {
+      } else if (playerColor === PlayerColor.ORANGE) {
+        setOrangeDiscs(prev => {
           const newDiscs = [...prev];
           newDiscs[discIndex] = newPosition;
           return newDiscs;
@@ -449,8 +449,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         currentDiscPosition = greenDiscs[discIndex];
       } else if (playerColor === PlayerColor.YELLOW) {
         currentDiscPosition = yellowDiscs[discIndex];
-      } else if (playerColor === PlayerColor.RED) {
-        currentDiscPosition = redDiscs[discIndex];
+      } else if (playerColor === PlayerColor.ORANGE) {
+        currentDiscPosition = orangeDiscs[discIndex];
       } else {
         currentDiscPosition = [0, 0]; // Fallback
       }
@@ -565,7 +565,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     };
   }, [showDebugMode]);
 
-  const redSquares = [
+  const orangeSquares = [
     // Top row
     [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5],
     // Left and right columns
@@ -674,8 +674,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       [7, 14], [7, 13], [7, 12], [7, 11], [7, 10], [7, 9], [7, 8]
     ];
 
-    // Red player's complete path from start to finish
-  const redPath = [
+    // Orange player's complete path from start to finish
+  const orangePath = [
       [6, 1], [6, 2], [6, 3], [6, 4], [6, 5], 
       [5, 6], [4, 6], [3, 6], [2, 6], [1, 6],
       [0, 6], [0, 7],
@@ -690,8 +690,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     ];
 
   const cellClassMap: Record<string, string> = {
-    // Red corner
-    ...Object.fromEntries(redSquares.map(([row, col]) => [`${row},${col}`, 'board-cell red-corner'])),
+    // Orange corner
+    ...Object.fromEntries(orangeSquares.map(([row, col]) => [`${row},${col}`, 'board-cell orange-corner'])),
     
     // Green corner
     ...Object.fromEntries(greenSquares.map(([row, col]) => [`${row},${col}`, 'board-cell green-corner'])),
@@ -706,7 +706,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     ...Object.fromEntries(graySquares.map(([row, col]) => [`${row},${col}`, 'board-cell black-path'])),
     
     // Final squares with colored borders
-    '7,6': 'board-cell final-square-red',
+    '7,6': 'board-cell final-square-orange',
     '6,7': 'board-cell final-square-green', 
     '7,8': 'board-cell final-square-yellow',
     '8,7': 'board-cell final-square-blue',
@@ -720,7 +720,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     const isPathCell = bluePath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col) ||
                       greenPath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col) ||
                       yellowPath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col) ||
-                      redPath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col);
+                      orangePath.some(([pathRow, pathCol]) => pathRow === row && pathCol === col);
     
     // Don't add path-cell class to final squares to avoid border conflicts
     const isFinalSquare = (row === 7 && col === 6) || (row === 6 && col === 7) || 
@@ -734,7 +734,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const getDieColor = (playerColor?: PlayerColor) => {
     const color = playerColor || currentTurnColor;
     switch (color) {
-      case PlayerColor.RED: return '#ff6b6b';
+      case PlayerColor.ORANGE: return '#ff9500';
       case PlayerColor.GREEN: return '#51cf66';
       case PlayerColor.BLUE: return '#339af0';
       case PlayerColor.YELLOW: return '#ffd43b';
@@ -769,11 +769,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           startingPositions: [[11, 11], [11, 12], [12, 11], [12, 12]] as [number, number][],
           startingPathPosition: [8, 13] as [number, number]
         };
-      case PlayerColor.RED:
+      case PlayerColor.ORANGE:
         return {
-          discs: redDiscs,
-          setDiscs: setRedDiscs,
-          path: redPath,
+          discs: orangeDiscs,
+          setDiscs: setOrangeDiscs,
+          path: orangePath,
           startingPositions: [[2, 2], [2, 3], [3, 2], [3, 3]] as [number, number][],
           startingPathPosition: [6, 1] as [number, number]
         };
@@ -848,7 +848,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         case PlayerColor.BLUE: finalSquare = [8, 7]; break;
         case PlayerColor.GREEN: finalSquare = [6, 7]; break;
         case PlayerColor.YELLOW: finalSquare = [7, 8]; break;
-        case PlayerColor.RED: finalSquare = [7, 6]; break;
+        case PlayerColor.ORANGE: finalSquare = [7, 6]; break;
         default: finalSquare = [0, 0];
       }
       
@@ -963,7 +963,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             case PlayerColor.BLUE: finalSquare = [8, 7]; break;
             case PlayerColor.GREEN: finalSquare = [6, 7]; break;
             case PlayerColor.YELLOW: finalSquare = [7, 8]; break;
-            case PlayerColor.RED: finalSquare = [7, 6]; break;
+            case PlayerColor.ORANGE: finalSquare = [7, 6]; break;
             default: finalSquare = [0, 0];
           }
           
@@ -1054,7 +1054,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       case PlayerColor.BLUE: return 'green';
       case PlayerColor.GREEN: return 'blue';
       case PlayerColor.YELLOW: return 'green';
-      case PlayerColor.RED: return 'yellow';
+      case PlayerColor.ORANGE: return 'yellow';
       default: return 'unknown';
     }
   };
@@ -1118,8 +1118,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     await handleDiscClick(PlayerColor.YELLOW, discIndex);
   };
 
-  const handleRedDiscClick = async (discIndex: number) => {
-    await handleDiscClick(PlayerColor.RED, discIndex);
+  const handleOrangeDiscClick = async (discIndex: number) => {
+    await handleDiscClick(PlayerColor.ORANGE, discIndex);
   };
 
   // Check if a disc is in its home position
@@ -1128,7 +1128,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       [PlayerColor.BLUE]: [[11, 2], [11, 3], [12, 2], [12, 3]],
       [PlayerColor.GREEN]: [[2, 11], [2, 12], [3, 11], [3, 12]],
       [PlayerColor.YELLOW]: [[11, 11], [11, 12], [12, 11], [12, 12]],
-      [PlayerColor.RED]: [[2, 2], [2, 3], [3, 2], [3, 3]]
+      [PlayerColor.ORANGE]: [[2, 2], [2, 3], [3, 2], [3, 3]]
     };
     
     const positions = homePositions[playerColor] || [];
@@ -1142,7 +1142,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   // Helper function to generate confetti
   const generateConfetti = () => {
     console.log('Generating confetti...');
-    const colors = ['#ff6b6b', '#51cf66', '#339af0', '#ffd43b', '#ff922b', '#be4bdb'];
+    const colors = ['#ff9500', '#51cf66', '#339af0', '#ffd43b', '#ff922b', '#be4bdb'];
     const newConfetti = [];
     
     for (let i = 0; i < 100; i++) {
@@ -1178,8 +1178,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         discs = yellowDiscs;
         finalSquare = [7, 8];
         break;
-      case PlayerColor.RED:
-        discs = redDiscs;
+      case PlayerColor.ORANGE:
+        discs = orangeDiscs;
         finalSquare = [7, 6];
         break;
       default:
@@ -1235,7 +1235,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   // Helper function to test celebration
   const testCelebration = () => {
-    const colors = [PlayerColor.BLUE, PlayerColor.GREEN, PlayerColor.YELLOW, PlayerColor.RED];
+    const colors = [PlayerColor.BLUE, PlayerColor.GREEN, PlayerColor.YELLOW, PlayerColor.ORANGE];
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     triggerVictory(randomColor);
   };
@@ -1254,7 +1254,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         return [[2, 11], [2, 12], [3, 11], [3, 12]];
       case PlayerColor.YELLOW:
         return [[11, 11], [11, 12], [12, 11], [12, 12]];
-      case PlayerColor.RED:
+      case PlayerColor.ORANGE:
         return [[2, 2], [2, 3], [3, 2], [3, 3]];
       default:
         return [];
@@ -1302,10 +1302,10 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       }
     });
     
-    // Check red discs
-    redDiscs.forEach((disc, index) => {
+    // Check orange discs
+    orangeDiscs.forEach((disc, index) => {
       if (disc[0] === landingPosition[0] && disc[1] === landingPosition[1]) {
-        allDiscsAtPosition.push({ color: PlayerColor.RED, index });
+        allDiscsAtPosition.push({ color: PlayerColor.ORANGE, index });
       }
     });
 
@@ -1391,9 +1391,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           });
         }
         
-        // Check red discs in home
-        if (opponentDisc.color === PlayerColor.RED) {
-          redDiscs.forEach(disc => {
+        // Check orange discs in home
+        if (opponentDisc.color === PlayerColor.ORANGE) {
+          orangeDiscs.forEach(disc => {
             if (homePositions.some(home => home[0] === disc[0] && home[1] === disc[1])) {
               occupiedHomePositions.add(`${disc[0]},${disc[1]}`);
             }
@@ -1419,8 +1419,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             currentDiscPosition = greenDiscs[opponentDisc.index];
           } else if (opponentDisc.color === PlayerColor.YELLOW) {
             currentDiscPosition = yellowDiscs[opponentDisc.index];
-          } else if (opponentDisc.color === PlayerColor.RED) {
-            currentDiscPosition = redDiscs[opponentDisc.index];
+          } else if (opponentDisc.color === PlayerColor.ORANGE) {
+            currentDiscPosition = orangeDiscs[opponentDisc.index];
           } else {
             currentDiscPosition = [0, 0]; // Fallback
           }
@@ -1445,8 +1445,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return { discs: greenDiscs, path: greenPath };
     } else if (playerColor === PlayerColor.YELLOW) {
       return { discs: yellowDiscs, path: yellowPath };
-    } else if (playerColor === PlayerColor.RED) {
-      return { discs: redDiscs, path: redPath };
+          } else if (playerColor === PlayerColor.ORANGE) {
+              return { discs: orangeDiscs, path: orangePath };
     } else {
       return { discs: [], path: [] };
     }
@@ -1537,7 +1537,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     } else {
       setPulsatingDiscs(new Set());
     }
-  }, [dieResult, currentTurnColor, localPlayerColor, moveMade, hasRolled, blueDiscs, greenDiscs, yellowDiscs, redDiscs]);
+  }, [dieResult, currentTurnColor, localPlayerColor, moveMade, hasRolled, blueDiscs, greenDiscs, yellowDiscs, orangeDiscs]);
 
   // Function to stop pulsating for a specific disc
   const stopPulsating = (playerColor: PlayerColor, discIndex: number) => {
@@ -1578,8 +1578,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         newDiscs[discIndex] = endPosition;
         return newDiscs;
       });
-    } else if (playerColor === PlayerColor.RED) {
-      setRedDiscs(prev => {
+    } else if (playerColor === PlayerColor.ORANGE) {
+      setOrangeDiscs(prev => {
         const newDiscs = [...prev];
         newDiscs[discIndex] = endPosition;
         return newDiscs;
@@ -1725,9 +1725,10 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       });
     }
     
-    if (currentGame?.players.some((player: Player) => player.color === 'red')) {
-      redDiscs.forEach((disc, index) => {
-        allDiscs.push({ position: disc, color: PlayerColor.RED, index });
+    if (currentGame?.players.some((player: Player) => player.color === 'orange')) {
+      console.log('Adding orange discs to allDiscs:', orangeDiscs);
+      orangeDiscs.forEach((disc, index) => {
+        allDiscs.push({ position: disc, color: PlayerColor.ORANGE, index });
       });
     }
     
@@ -1777,8 +1778,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             onClickHandler = handleGreenDiscClick;
           } else if (color === PlayerColor.YELLOW) {
             onClickHandler = handleYellowDiscClick;
-          } else if (color === PlayerColor.RED) {
-            onClickHandler = handleRedDiscClick;
+          } else if (color === PlayerColor.ORANGE) {
+            onClickHandler = handleOrangeDiscClick;
           } else {
             onClickHandler = () => {}; // No handler for other colors yet
           }
@@ -1811,6 +1812,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               } as React.CSSProperties}
               title={`${color} disc ${discIndex + 1}`}
             >
+
             </div>
           );
         })}
@@ -2008,9 +2010,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                   // Final squares with colored borders using outline
                   ...(row === 7 && col === 6 && { 
                     backgroundColor: 'white',
-                    outline: '3px solid #ff6b6b',
+                    outline: '3px solid #ff9500',
                     outlineOffset: '-3px'
-                  }), // Red final square
+                  }), // Orange final square
                   ...(row === 6 && col === 7 && { 
                     backgroundColor: 'white',
                     outline: '3px solid #51cf66',
@@ -2054,9 +2056,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 )}
                 
                 {/* Home stretch arrows */}
-                {/* Red arrow pointing right at [7,0] */}
+                {/* Orange arrow pointing right at [7,0] */}
                 {row === 7 && col === 0 && (
-                  <div className="home-arrow red-arrow">
+                                      <div className="home-arrow orange-arrow">
                     ➡️
                   </div>
                 )}
@@ -2102,10 +2104,10 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                     );
                   }
                   
-                  // Red home area - show pill centered across squares 1,1 to 1,4
-                  if (player.color === 'red' && row === 1 && col === 2) {
+                  // Orange home area - show pill centered across squares 1,1 to 1,4
+                  if (player.color === 'orange' && row === 1 && col === 2) {
                     return (
-                      <div key={`${player.id}-red`} className="player-name-overlay red-name home-pill red-home-pill">
+                                              <div key={`${player.id}-orange`} className="player-name-overlay orange-name home-pill orange-home-pill">
                         {player.name}
                       </div>
                     );
@@ -2124,10 +2126,10 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 })}
                 
                 {/* Placeholder indicators for colors without players */}
-                {/* Red home squares: [2,2], [2,3], [3,2], [3,3] */}
-                {!currentGame?.players.some((player: Player) => player.color === 'red') && 
+                                  {/* Orange home squares: [2,2], [2,3], [3,2], [3,3] */}
+                {!currentGame?.players.some((player: Player) => player.color === 'orange') && 
                  ((row === 2 && (col === 2 || col === 3)) || (row === 3 && (col === 2 || col === 3))) && (
-                  <div className="placeholder-disc red-placeholder" />
+                                      <div className="placeholder-disc orange-placeholder" />
                 )}
                 
                 {/* Yellow home squares: [11,11], [11,12], [12,11], [12,12] */}
@@ -2171,7 +2173,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           
           // Position dice next to their name pills consistently
           let diePosition = {};
-          if (player.color === 'red') {
+                          if (player.color === 'orange') {
             diePosition = { top: '7.5%', left: '26%' }; // Same as green but left side, moved 16px right
           } else if (player.color === 'green') {
             diePosition = { top: '7.5%', right: '10%' }; // Position slightly higher (about 1px up)
@@ -2332,7 +2334,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               background: winnerColor === PlayerColor.BLUE ? 'linear-gradient(135deg, #339af0 0%, #1c7ed6 100%)' :
                          winnerColor === PlayerColor.GREEN ? 'linear-gradient(135deg, #51cf66 0%, #37b24d 100%)' :
                          winnerColor === PlayerColor.YELLOW ? 'linear-gradient(135deg, #ffd43b 0%, #fcc419 100%)' :
-                         winnerColor === PlayerColor.RED ? 'linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%)' :
+                         winnerColor === PlayerColor.ORANGE ? 'linear-gradient(135deg, #ff9500 0%, #ff8c00 100%)' :
                          'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
             }}
           >

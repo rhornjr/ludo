@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PositionType = exports.GameState = exports.PlayerColor = void 0;
 var PlayerColor;
 (function (PlayerColor) {
-    PlayerColor["RED"] = "red";
+    PlayerColor["ORANGE"] = "orange";
     PlayerColor["GREEN"] = "green";
     PlayerColor["BLUE"] = "blue";
     PlayerColor["YELLOW"] = "yellow";

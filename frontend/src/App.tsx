@@ -55,7 +55,7 @@ function App() {
           setAvailableColors(colorsResult.availableColors);
         } else {
           // Fallback to all colors if getAvailableColors fails
-          setAvailableColors([PlayerColor.RED, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW]);
+          setAvailableColors([PlayerColor.ORANGE, PlayerColor.GREEN, PlayerColor.BLUE, PlayerColor.YELLOW]);
         }
         setShowColorSelection(true);
       } else {

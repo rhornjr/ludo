@@ -48,7 +48,7 @@ export const StarterSelection: React.FC<StarterSelectionProps> = ({ players, onS
 
   const getColorClass = (color: PlayerColor) => {
     switch (color) {
-      case PlayerColor.RED: return 'red';
+      case PlayerColor.ORANGE: return 'orange';
       case PlayerColor.GREEN: return 'green';
       case PlayerColor.BLUE: return 'blue';
       case PlayerColor.YELLOW: return 'yellow';
@@ -58,7 +58,7 @@ export const StarterSelection: React.FC<StarterSelectionProps> = ({ players, onS
 
   const getColorName = (color: PlayerColor) => {
     switch (color) {
-      case PlayerColor.RED: return 'Red';
+      case PlayerColor.ORANGE: return 'Orange';
       case PlayerColor.GREEN: return 'Green';
       case PlayerColor.BLUE: return 'Blue';
       case PlayerColor.YELLOW: return 'Yellow';

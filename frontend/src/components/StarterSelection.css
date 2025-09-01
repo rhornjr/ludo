@@ -48,8 +48,8 @@
   animation: pulse 0.5s ease-in-out;
 }
 
-.spinning-player.red {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+.spinning-player.orange {
+  background: linear-gradient(135deg, #ff9500, #ff8c00);
   color: white;
 }
 
@@ -78,10 +78,10 @@
   animation: bounceIn 0.6s ease-out;
 }
 
-.selected-player.red {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+.selected-player.orange {
+  background: linear-gradient(135deg, #ff9500, #ff8c00);
   color: white;
-  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 10px 30px rgba(255, 149, 0, 0.4);
 }
 
 .selected-player.green {
