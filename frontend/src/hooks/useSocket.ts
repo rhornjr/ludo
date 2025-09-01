@@ -189,6 +189,19 @@ export const useSocket = () => {
     });
   };
 
+  const playerWon = (gameId: string, playerColor: PlayerColor): Promise<{ success: boolean }> => {
+    return new Promise((resolve, reject) => {
+      if (!socket) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+
+      socket.emit('playerWon', { gameId, playerColor }, (response: { success: boolean }) => {
+        resolve(response);
+      });
+    });
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -282,6 +295,21 @@ export const useSocket = () => {
       // This will be handled by the App component when it detects the game state change
     };
 
+    const handlePlayerWon = ({ playerColor }: { playerColor: PlayerColor }) => {
+      console.log('=== PLAYER WON EVENT RECEIVED ===');
+      console.log('Player won:', playerColor);
+      
+      // Trigger victory celebration for all players
+      if (dieRollCallback) {
+        // We'll use the dieRollCallback to trigger the victory celebration
+        // This is a bit of a hack, but it will work for now
+        setTimeout(() => {
+          // Trigger a custom victory event
+          window.dispatchEvent(new CustomEvent('playerWon', { detail: { playerColor } }));
+        }, 100);
+      }
+    };
+
     socket.on('playerJoined', handlePlayerJoined);
     socket.on('playerLeft', handlePlayerLeft);
     socket.on('gameStarted', handleGameStarted);
@@ -290,6 +318,7 @@ export const useSocket = () => {
     socket.on('turnSwitched', handleTurnSwitched);
     socket.on('discMoved', handleDiscMoved);
     socket.on('playerColorChanged', handlePlayerColorChanged);
+    socket.on('playerWon', handlePlayerWon);
 
     return () => {
       socket.off('playerJoined', handlePlayerJoined);
@@ -298,8 +327,9 @@ export const useSocket = () => {
       socket.off('starterSelectionStarted', handleStarterSelectionStarted);
       socket.off('dieRolled', handleDieRolled);
       socket.off('turnSwitched', handleTurnSwitched);
-      socket.off('discMoved', handleDiscMoved);
-      socket.off('playerColorChanged', handlePlayerColorChanged);
+          socket.off('discMoved', handleDiscMoved);
+    socket.off('playerColorChanged', handlePlayerColorChanged);
+    socket.off('playerWon', handlePlayerWon);
     };
   }, [socket]);
 
@@ -316,6 +346,7 @@ export const useSocket = () => {
     rollDie,
     switchTurn,
     moveDisc,
+    playerWon,
     setDieRollCallback,
     pendingDieRoll
   };

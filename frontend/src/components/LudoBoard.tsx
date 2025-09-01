@@ -12,6 +12,7 @@ interface LudoBoardProps {
   socketRollDie?: (gameId: string) => Promise<{ success: boolean; result?: number; error?: string }>;
   switchTurn?: (gameId: string) => Promise<{ success: boolean }>;
   moveDisc?: (gameId: string, playerColor: PlayerColor, discIndex: number, newPosition: [number, number]) => Promise<{ success: boolean }>;
+  playerWon?: (gameId: string, playerColor: PlayerColor) => Promise<{ success: boolean }>;
   startGame?: (gameId: string) => Promise<{ success: boolean; error?: string }>;
   socket?: any;
   currentGame?: any;
@@ -19,7 +20,7 @@ interface LudoBoardProps {
   pendingDieRoll?: number | null;
 }
 
-export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnClick, onDieRoll, gameId, socketRollDie, switchTurn, moveDisc, startGame, socket, currentGame, setDieRollCallback, pendingDieRoll }) => {
+export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnClick, onDieRoll, gameId, socketRollDie, switchTurn, moveDisc, playerWon, startGame, socket, currentGame, setDieRollCallback, pendingDieRoll }) => {
   // Derive current turn from game state
   const currentTurnColor = currentGame?.players[currentGame.currentPlayerIndex]?.color;
   const [showCoordinates, setShowCoordinates] = useState(false);
@@ -79,6 +80,22 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   useEffect(() => {
     console.log('Victory state changed - showVictory:', showVictory, 'winnerColor:', winnerColor);
   }, [showVictory, winnerColor]);
+
+  // Listen for playerWon events from other players
+  useEffect(() => {
+    const handlePlayerWonEvent = (event: CustomEvent) => {
+      console.log('=== PLAYER WON EVENT RECEIVED IN LUDOBOARD ===');
+      console.log('Event detail:', event.detail);
+      const { playerColor } = event.detail;
+      triggerVictory(playerColor);
+    };
+
+    window.addEventListener('playerWon', handlePlayerWonEvent as EventListener);
+
+    return () => {
+      window.removeEventListener('playerWon', handlePlayerWonEvent as EventListener);
+    };
+  }, []);
   const [confetti, setConfetti] = useState<Array<{id: number, x: number, y: number, color: string, rotation: number, velocity: number}>>([]);
   const [explosions, setExplosions] = useState<Array<{id: number, x: number, y: number}>>([]);
 
@@ -510,8 +527,23 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               }, 2000); // Give 2 seconds for the player to see the result
             }
           } else if (result === 6) {
-            // Player rolled a 6, they get another turn - don't auto-switch
-            console.log('Player rolled a 6, waiting for them to make a move');
+            // Player rolled a 6, check if they have valid moves
+            const hasMoves = hasValidMoves(result, currentTurnColor);
+            console.log(`Player rolled a 6 - hasMoves: ${hasMoves}`);
+            if (!hasMoves) {
+              console.log('Player rolled a 6 but no valid moves available, auto-switching turn');
+              setTimeout(() => {
+                setDieResult(null);
+                setHasRolled(false); // Reset rolled state when turn switches
+                if (switchTurn && gameId) {
+                  switchTurn(gameId).catch(error => {
+                    console.error('Error switching turn:', error);
+                  });
+                }
+              }, 2000); // Give 2 seconds for the player to see the result
+            } else {
+              console.log('Player rolled a 6 and has valid moves, waiting for them to make a move');
+            }
           }
         }
       }, 1000); // Animation delay
@@ -1172,6 +1204,16 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       }
     })();
     
+    // Broadcast victory to all players
+    if (playerWon && gameId) {
+      console.log('Broadcasting victory to all players');
+      playerWon(gameId, winnerColor).then(result => {
+        console.log('Victory broadcast result:', result);
+      }).catch(error => {
+        console.error('Error broadcasting victory:', error);
+      });
+    }
+    
     // Hide victory message after 5 seconds
     const timeoutId = setTimeout(() => {
       console.log('Hiding victory message after 5 seconds');
@@ -1815,6 +1857,17 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     <div className="ludo-board">
       {showDebugMode && (
         <div className="dev-options">
+          <div className="debug-info" style={{ 
+            fontSize: '12px', 
+            color: '#666', 
+            marginBottom: '10px',
+            padding: '8px',
+            backgroundColor: '#f0f0f0',
+            borderRadius: '4px',
+            border: '1px solid #ddd'
+          }}>
+            <strong>Debug Mode Active</strong> - Press Ctrl+Shift+D to toggle. Use these tools to test and fix game issues.
+          </div>
           <div className="coordinate-toggle">
             <label>
               <input
@@ -1941,6 +1994,29 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             title="Force blue player to win for testing"
           >
             Force Blue Win
+          </button>
+
+          <button
+            className="force-switch-button"
+            onClick={() => {
+              console.log('Force switch turn clicked');
+              if (switchTurn && gameId) {
+                console.log('Calling switchTurn function from debug menu');
+                switchTurn(gameId).then(result => {
+                  console.log('Force switch turn result:', result);
+                  // Reset die state
+                  setDieResult(null);
+                  setHasRolled(false);
+                  setMoveMade(false);
+                  setForcedRollNumber(null);
+                }).catch(error => {
+                  console.error('Error force switching turn:', error);
+                });
+              }
+            }}
+            title="Force switch to next player's turn"
+          >
+            🔄 Force Switch Turn
           </button>
 
 

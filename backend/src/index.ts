@@ -109,6 +109,12 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('playerWon', ({ gameId, playerColor }, callback) => {
+    console.log('Player won event received for game:', gameId, 'player:', playerColor);
+    const result = gameManager.playerWon(gameId, playerColor);
+    callback(result);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     gameManager.handlePlayerDisconnect(socket.id);

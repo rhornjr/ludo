@@ -227,6 +227,15 @@ export class GameManager {
     }
 
     console.log('Switching turn in game:', gameId, 'from player index:', game.currentPlayerIndex);
+    console.log('Current dice value:', game.diceValue);
+    
+    // If the current player rolled a 6, they should get another turn
+    if (game.diceValue === 6) {
+      console.log('Player rolled a 6, keeping turn for another roll');
+      // Reset dice value but keep the same player
+      game.diceValue = 0;
+      return { success: true, game: this.serializeGameForSocket(game) };
+    }
     
     // Switch to the next player
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
@@ -261,6 +270,21 @@ export class GameManager {
     }
 
     return { success: true, game };
+  }
+
+  playerWon(gameId: string, playerColor: PlayerColor): { success: boolean; error?: string } {
+    const game = this.games.get(gameId);
+    
+    if (!game) {
+      return { success: false, error: 'Game not found' };
+    }
+
+    console.log('Player won event received for game:', gameId, 'player:', playerColor);
+    
+    // Broadcast the victory to all players in the game
+    this.io.to(gameId).emit('playerWon', { playerColor });
+    
+    return { success: true };
   }
 
   private createBoard() {

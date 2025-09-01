@@ -7,7 +7,7 @@ import { PlayerColor } from './types/game';
 import './App.css';
 
 function App() {
-  const { socket, isConnected, currentGame, error, createGame, joinGame, getAvailableColors, assignColor, startGame, rollDie, switchTurn, moveDisc, setDieRollCallback, pendingDieRoll } = useSocket();
+  const { socket, isConnected, currentGame, error, createGame, joinGame, getAvailableColors, assignColor, startGame, rollDie, switchTurn, moveDisc, playerWon, setDieRollCallback, pendingDieRoll } = useSocket();
   const [gameId, setGameId] = useState<string | null>(null);
   const [showLobby, setShowLobby] = useState(true);
   const [currentPlayer, setCurrentPlayer] = useState<{ id: string; name: string; color: PlayerColor } | null>(null);
@@ -212,14 +212,15 @@ function App() {
                 localPlayerColor={currentPlayer?.color}
                 onPawnClick={handlePawnClick}
                 gameId={gameId || undefined}
-                socketRollDie={rollDie}
-                switchTurn={switchTurn}
-                moveDisc={moveDisc}
-                startGame={startGame}
-                socket={socket}
-                currentGame={currentGame}
-                setDieRollCallback={setDieRollCallback}
-                pendingDieRoll={pendingDieRoll}
+                              socketRollDie={rollDie}
+              switchTurn={switchTurn}
+              moveDisc={moveDisc}
+              playerWon={playerWon}
+              startGame={startGame}
+              socket={socket}
+              currentGame={currentGame}
+              setDieRollCallback={setDieRollCallback}
+              pendingDieRoll={pendingDieRoll}
               />
             </div>
           ) : (
