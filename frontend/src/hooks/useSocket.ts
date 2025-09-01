@@ -158,9 +158,10 @@ export const useSocket = () => {
     });
   };
 
-  const switchTurn = (gameId: string): Promise<{ success: boolean }> => {
+  const switchTurn = (gameId: string, force: boolean = false): Promise<{ success: boolean }> => {
     console.log('=== SWITCH TURN FUNCTION CALLED ===');
     console.log('Game ID:', gameId);
+    console.log('Force switch:', force);
     return new Promise((resolve, reject) => {
       if (!socket) {
         console.log('Socket not connected, rejecting');
@@ -169,7 +170,7 @@ export const useSocket = () => {
       }
 
       console.log('Emitting switchTurn event to server');
-      socket.emit('switchTurn', { gameId }, (response: { success: boolean }) => {
+      socket.emit('switchTurn', { gameId, force }, (response: { success: boolean }) => {
         console.log('SwitchTurn response received:', response);
         resolve(response);
       });

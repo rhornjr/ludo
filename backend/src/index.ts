@@ -71,9 +71,9 @@ io.on('connection', (socket) => {
     callback(result);
   });
 
-  socket.on('switchTurn', ({ gameId }, callback) => {
-    console.log('Switch turn request received for game:', gameId, 'from socket:', socket.id);
-    const result = gameManager.switchTurn(gameId);
+  socket.on('switchTurn', ({ gameId, force = false }, callback) => {
+    console.log('Switch turn request received for game:', gameId, 'from socket:', socket.id, 'force:', force);
+    const result = gameManager.switchTurn(gameId, force);
     console.log('SwitchTurn result:', result);
     if (result.success) {
       console.log('Broadcasting turn switch to game:', gameId, 'new player index:', result.game?.currentPlayerIndex);

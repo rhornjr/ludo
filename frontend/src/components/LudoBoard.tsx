@@ -10,7 +10,7 @@ interface LudoBoardProps {
   onDieRoll?: (result: number) => void;
   gameId?: string;
   socketRollDie?: (gameId: string, forcedRoll?: number) => Promise<{ success: boolean; result?: number; error?: string }>;
-  switchTurn?: (gameId: string) => Promise<{ success: boolean }>;
+  switchTurn?: (gameId: string, force?: boolean) => Promise<{ success: boolean }>;
   moveDisc?: (gameId: string, playerColor: PlayerColor, discIndex: number, newPosition: [number, number]) => Promise<{ success: boolean }>;
   playerWon?: (gameId: string, playerColor: PlayerColor) => Promise<{ success: boolean }>;
   startGame?: (gameId: string) => Promise<{ success: boolean; error?: string }>;
@@ -530,7 +530,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 setDieResult(null);
                 setHasRolled(false); // Reset rolled state when turn switches
                 if (switchTurn && gameId) {
-                  switchTurn(gameId).catch(error => {
+                  switchTurn(gameId, false).catch(error => {
                     console.error('Error switching turn:', error);
                   });
                 }
@@ -1022,7 +1022,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           setTimeout(() => {
             if (switchTurn && gameId) {
               console.log('Calling switchTurn function after using extra roll');
-              switchTurn(gameId).then(result => {
+              switchTurn(gameId, false).then(result => {
                 console.log('SwitchTurn result:', result);
               }).catch(error => {
                 console.error('Error switching turn:', error);
@@ -1041,7 +1041,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           setTimeout(() => {
             if (switchTurn && gameId) {
               console.log('Calling switchTurn function');
-              switchTurn(gameId).then(result => {
+              switchTurn(gameId, false).then(result => {
                 console.log('SwitchTurn result:', result);
               }).catch(error => {
                 console.error('Error switching turn:', error);
@@ -1334,7 +1334,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         if (switchTurn && gameId) {
           console.log('Non-local player knocked disc home, switching turn');
           setTimeout(() => {
-            switchTurn(gameId).catch(error => {
+            switchTurn(gameId, false).catch(error => {
               console.error('Error switching turn after knock home:', error);
             });
           }, 1000);
@@ -1928,7 +1928,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                           setDieResult(null);
                           setHasRolled(false); // Reset rolled state when turn switches
                           if (switchTurn && gameId) {
-                            switchTurn(gameId).catch(error => {
+                            switchTurn(gameId, false).catch(error => {
                               console.error('Error switching turn:', error);
                             });
                           }
@@ -1987,8 +1987,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             onClick={() => {
               console.log('Force switch turn clicked');
               if (switchTurn && gameId) {
-                console.log('Calling switchTurn function from debug menu');
-                switchTurn(gameId).then(result => {
+                console.log('Calling switchTurn function from debug menu with force=true');
+                switchTurn(gameId, true).then(result => {
                   console.log('Force switch turn result:', result);
                   // Reset die state
                   setDieResult(null);

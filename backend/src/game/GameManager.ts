@@ -248,7 +248,7 @@ export class GameManager {
     return { success: true, result: dieResult };
   }
 
-  switchTurn(gameId: string): { success: boolean; game?: Game; error?: string } {
+  switchTurn(gameId: string, force: boolean = false): { success: boolean; game?: Game; error?: string } {
     const game = this.games.get(gameId);
     
     if (!game) {
@@ -257,9 +257,11 @@ export class GameManager {
 
     console.log('Switching turn in game:', gameId, 'from player index:', game.currentPlayerIndex);
     console.log('Current dice value:', game.diceValue);
+    console.log('Force switch:', force);
     
-    // If the current player rolled a 6, they should get another turn
-    if (game.diceValue === 6) {
+    // If this is a force switch (manual), always switch turns regardless of dice value
+    // If it's not a force switch, check if the current player rolled a 6
+    if (!force && game.diceValue === 6) {
       console.log('Player rolled a 6, keeping turn for another roll');
       // Reset dice value but keep the same player
       game.diceValue = 0;
