@@ -268,6 +268,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   useEffect(() => {
     if (pendingDieRoll && !dieResult && !isRolling) {
       console.log('Processing pending die roll:', pendingDieRoll);
+      console.log('⚠️ WARNING: pendingDieRoll is being processed - this might be causing the repeated 6s!');
       setDieResult(pendingDieRoll);
       setIsRolling(false);
       setHasRolled(true); // Mark that the player has rolled
@@ -322,7 +323,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             setAnimationIndex(0);
             
             // Play sound immediately when animation starts
-            Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+            Sounds.playMovementSound().catch(error => console.log('Error playing movement sound:', error));
             
             // Start animation
             const animateStep = (stepIndex: number) => {
@@ -362,6 +363,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                   } else if (stepIndex === animationSteps.length - 1) {
                     // Play regular sound for final position if it's not an extra roll square
                     Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+                  } else {
+                    // Play movement sound for each intermediate step
+                    Sounds.playMovementSound().catch(error => console.log('Error playing movement sound:', error));
                   }
                 }
                 
@@ -896,7 +900,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       
       console.log(`${playerColor} disc - playing initial sound`);
       // Play sound immediately when animation starts
-      Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+      Sounds.playMovementSound().catch(error => console.log('Error playing movement sound:', error));
       
       // Start animation
       const animateStep = (stepIndex: number) => {
@@ -923,6 +927,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             } else if (stepIndex === animationSteps.length - 1) {
               // Play regular sound for final position if it's not an extra roll square
               Sounds.playSound().catch(error => console.log('Error playing sound:', error));
+            } else {
+              // Play movement sound for each intermediate step
+              Sounds.playMovementSound().catch(error => console.log('Error playing movement sound:', error));
             }
           }
           
@@ -1597,6 +1604,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Set rolling state immediately to prevent multiple clicks
     setIsRolling(true);
     
+    console.log('🎲 Rolling die - current forcedRollNumber:', forcedRollNumber);
     console.log('Roll die called - localPlayerColor:', localPlayerColor, 'currentTurnColor:', currentTurnColor);
     
     // Only allow rolling if it's the current player's turn
@@ -1623,6 +1631,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       // Use socket rolling if available, otherwise fallback to local
       if (socketRollDie && gameId) {
         console.log('Using socket rolling');
+        if (forcedRollNumber) {
+          console.log('⚠️ WARNING: Sending forced roll number to socket:', forcedRollNumber);
+        }
         const response = await socketRollDie(gameId, forcedRollNumber || undefined);
         const result = response.result;
         console.log('Socket die result:', result);
@@ -1634,6 +1645,9 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         setTimeout(() => {
           const result = forcedRollNumber || Math.floor(Math.random() * 6) + 1;
           console.log('Local die result:', result);
+          if (forcedRollNumber) {
+            console.log('⚠️ WARNING: Using forced roll number:', forcedRollNumber, 'instead of random roll!');
+          }
           
           // Use the same callback that socket rolling uses
           if (dieRollCallback) {

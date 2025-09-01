@@ -255,4 +255,36 @@ export class Sounds {
       console.log('Audio not supported');
     }
   }
+
+  // Play Pac-Man style eating sound for disc movement
+  static async playMovementSound(): Promise<void> {
+    try {
+      const ctx = await this.getAudioContext();
+      
+      // Create a Pac-Man style "waka" sound - quick, bright, satisfying
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Use square wave for that classic arcade sound
+      oscillator.type = 'square';
+      
+      // Start with a higher frequency and quickly drop to create the "waka" effect
+      oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+      
+      // Quick attack and decay for the characteristic sound
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.08);
+      
+    } catch (error) {
+      console.log('Audio not supported');
+    }
+  }
 }
