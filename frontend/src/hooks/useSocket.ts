@@ -32,25 +32,58 @@ export const useSocket = () => {
   const [pendingDieRoll, setPendingDieRoll] = useState<number | null>(null);
 
   useEffect(() => {
-    const newSocket = io(SERVER_URL);
+    console.log('=== INITIALIZING SOCKET CONNECTION ===');
+    console.log('Connecting to SERVER_URL:', SERVER_URL);
+    
+    const newSocket = io(SERVER_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+    
+    console.log('Socket instance created:', newSocket.id || 'pending connection');
     
     newSocket.on('connect', () => {
+      console.log('✅ Socket connected successfully! Socket ID:', newSocket.id);
       setIsConnected(true);
       setError(null);
     });
 
-    newSocket.on('disconnect', () => {
+    newSocket.on('disconnect', (reason) => {
+      console.log('❌ Socket disconnected. Reason:', reason);
       setIsConnected(false);
     });
 
-    newSocket.on('connect_error', (err) => {
-      setError('Failed to connect to server');
-      console.error('Connection error:', err);
+    newSocket.on('connect_error', (err: Error) => {
+      console.error('❌ Socket connection error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
+      setError(`Failed to connect to server: ${err.message}`);
+    });
+
+    newSocket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`🔄 Reconnection attempt ${attemptNumber}`);
+    });
+
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log(`✅ Reconnected after ${attemptNumber} attempts`);
+      setIsConnected(true);
+      setError(null);
+    });
+
+    newSocket.on('reconnect_failed', () => {
+      console.error('❌ Reconnection failed after all attempts');
+      setError('Failed to reconnect to server after multiple attempts');
     });
 
     setSocket(newSocket);
 
     return () => {
+      console.log('Cleaning up socket connection');
       newSocket.close();
     };
   }, []);

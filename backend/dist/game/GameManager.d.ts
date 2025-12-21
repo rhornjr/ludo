@@ -20,7 +20,7 @@ export declare class GameManager {
         result?: number;
         error?: string;
     };
-    switchTurn(gameId: string): {
+    switchTurn(gameId: string, force?: boolean): {
         success: boolean;
         game?: Game;
         error?: string;

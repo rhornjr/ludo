@@ -6,18 +6,30 @@ import { GameManager } from './game/GameManager';
 
 const app = express();
 const server = createServer(app);
+
+// CORS configuration - allow localhost and local network IPs
+// Socket.io needs an array format for CORS origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://192.168.4.71:3000"  // Current network IP
+];
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://192.168.4.42:3000"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const HOST = process.env.HOST || '0.0.0.0'; // Listen on all network interfaces
 const gameManager = new GameManager(io);
 
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST"]
+}));
 app.use(express.json());
 
 app.get('/health', (req, res) => {
@@ -121,7 +133,7 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   console.log(`Server running on ${HOST}:${PORT}`);
-  console.log(`Local network access: http://192.168.4.42:${PORT}`);
+  console.log(`Local network access: http://192.168.4.71:${PORT}`);
 });

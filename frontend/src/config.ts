@@ -6,7 +6,7 @@ const config = {
   },
   // For local network access
   localNetwork: {
-    serverUrl: 'http://192.168.4.42:3001'
+    serverUrl: 'http://192.168.4.71:3001'
   },
   // For production (when you deploy)
   production: {
@@ -28,3 +28,11 @@ if (isProduction) {
 }
 
 export const SERVER_URL = currentConfig.serverUrl;
+
+// Debug logging
+console.log('Frontend Config:', {
+  hostname: window.location.hostname,
+  isLocalNetwork,
+  isProduction,
+  serverUrl: SERVER_URL
+});

@@ -10,16 +10,26 @@ const socket_io_1 = require("socket.io");
 const GameManager_1 = require("./game/GameManager");
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
+// CORS configuration - allow localhost and local network IPs
+// Socket.io needs an array format for CORS origins
+const allowedOrigins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://192.168.4.66:3000" // Current network IP
+];
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: ["http://localhost:3000", "http://192.168.4.42:3000"],
+        origin: allowedOrigins,
         methods: ["GET", "POST"]
     }
 });
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const HOST = process.env.HOST || '0.0.0.0'; // Listen on all network interfaces
 const gameManager = new GameManager_1.GameManager(io);
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: allowedOrigins,
+    methods: ["GET", "POST"]
+}));
 app.use(express_1.default.json());
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Ludo game server is running' });
@@ -64,9 +74,9 @@ io.on('connection', (socket) => {
         }
         callback(result);
     });
-    socket.on('switchTurn', ({ gameId }, callback) => {
-        console.log('Switch turn request received for game:', gameId, 'from socket:', socket.id);
-        const result = gameManager.switchTurn(gameId);
+    socket.on('switchTurn', ({ gameId, force = false }, callback) => {
+        console.log('Switch turn request received for game:', gameId, 'from socket:', socket.id, 'force:', force);
+        const result = gameManager.switchTurn(gameId, force);
         console.log('SwitchTurn result:', result);
         if (result.success) {
             console.log('Broadcasting turn switch to game:', gameId, 'new player index:', result.game?.currentPlayerIndex);
@@ -109,8 +119,8 @@ io.on('connection', (socket) => {
         gameManager.handlePlayerDisconnect(socket.id);
     });
 });
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
     console.log(`Server running on ${HOST}:${PORT}`);
-    console.log(`Local network access: http://192.168.4.42:${PORT}`);
+    console.log(`Local network access: http://192.168.4.66:${PORT}`);
 });
 //# sourceMappingURL=index.js.map
