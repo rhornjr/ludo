@@ -54,6 +54,8 @@ npm run dev
 ```bash
 cd frontend
 npm start
+# or if I want others to join on my network:
+npm run start:network
 ```
 
 3. Open your browser and navigate to `http://localhost:3000`

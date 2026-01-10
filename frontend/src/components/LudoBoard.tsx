@@ -46,23 +46,27 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
 
   
   // Blue disc positions: [row, col]
+  // All four discs in the same row, centered below the name tag
   const [blueDiscs, setBlueDiscs] = useState<[number, number][]>([
-    [11, 2], [11, 3], [12, 2], [12, 3] // Starting positions
+    [11, 1], [11, 2], [11, 3], [11, 4] // Starting positions - all in row 11, shifted left to center
   ]);
 
    // Green disc positions: [row, col]
+   // All four discs in the same row, centered below the name tag
    const [greenDiscs, setGreenDiscs] = useState<[number, number][]>([
-    [2, 11], [2, 12], [3, 11], [3, 12] // Starting positions
+    [2, 10], [2, 11], [2, 12], [2, 13] // Starting positions - all in row 2, shifted left to center
   ]);
 
    // Yellow disc positions: [row, col]
+   // All four discs in the same row, centered below the name tag
    const [yellowDiscs, setYellowDiscs] = useState<[number, number][]>([
-    [11, 11], [11, 12], [12, 11], [12, 12] // Starting positions
+    [11, 10], [11, 11], [11, 12], [11, 13] // Starting positions - all in row 11, shifted left to center
   ]);
 
    // Orange disc positions: [row, col]
+   // All four discs in the same row, centered below the name tag
    const [orangeDiscs, setOrangeDiscs] = useState<[number, number][]>([
-    [2, 2], [2, 3], [3, 2], [3, 3] // Starting positions
+    [2, 1], [2, 2], [2, 3], [2, 4] // Starting positions - all in row 2, shifted left to center
   ]);
   
   // Animation state
@@ -754,7 +758,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           discs: blueDiscs,
           setDiscs: setBlueDiscs,
           path: bluePath,
-          startingPositions: [[11, 2], [11, 3], [12, 2], [12, 3]] as [number, number][],
+          startingPositions: [[11, 1], [11, 2], [11, 3], [11, 4]] as [number, number][],
           startingPathPosition: [13, 6] as [number, number]
         };
       case PlayerColor.GREEN:
@@ -762,7 +766,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           discs: greenDiscs,
           setDiscs: setGreenDiscs,
           path: greenPath,
-          startingPositions: [[2, 11], [2, 12], [3, 11], [3, 12]] as [number, number][],
+          startingPositions: [[2, 10], [2, 11], [2, 12], [2, 13]] as [number, number][],
           startingPathPosition: [1, 8] as [number, number]
         };
       case PlayerColor.YELLOW:
@@ -770,7 +774,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           discs: yellowDiscs,
           setDiscs: setYellowDiscs,
           path: yellowPath,
-          startingPositions: [[11, 11], [11, 12], [12, 11], [12, 12]] as [number, number][],
+          startingPositions: [[11, 10], [11, 11], [11, 12], [11, 13]] as [number, number][],
           startingPathPosition: [8, 13] as [number, number]
         };
       case PlayerColor.ORANGE:
@@ -778,7 +782,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
           discs: orangeDiscs,
           setDiscs: setOrangeDiscs,
           path: orangePath,
-          startingPositions: [[2, 2], [2, 3], [3, 2], [3, 3]] as [number, number][],
+          startingPositions: [[2, 1], [2, 2], [2, 3], [2, 4]] as [number, number][],
           startingPathPosition: [6, 1] as [number, number]
         };
       default:
@@ -1132,10 +1136,10 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   // Check if a disc is in its home position
   const isInHome = (disc: [number, number], playerColor: PlayerColor): boolean => {
     const homePositions: Record<PlayerColor, [number, number][]> = {
-      [PlayerColor.BLUE]: [[11, 2], [11, 3], [12, 2], [12, 3]],
-      [PlayerColor.GREEN]: [[2, 11], [2, 12], [3, 11], [3, 12]],
-      [PlayerColor.YELLOW]: [[11, 11], [11, 12], [12, 11], [12, 12]],
-      [PlayerColor.ORANGE]: [[2, 2], [2, 3], [3, 2], [3, 3]]
+      [PlayerColor.BLUE]: [[11, 1], [11, 2], [11, 3], [11, 4]],
+      [PlayerColor.GREEN]: [[2, 10], [2, 11], [2, 12], [2, 13]],
+      [PlayerColor.YELLOW]: [[11, 10], [11, 11], [11, 12], [11, 13]],
+      [PlayerColor.ORANGE]: [[2, 1], [2, 2], [2, 3], [2, 4]]
     };
     
     const positions = homePositions[playerColor] || [];
@@ -1256,13 +1260,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
   const getHomePositions = (playerColor: PlayerColor): [number, number][] => {
     switch (playerColor) {
       case PlayerColor.BLUE:
-        return [[11, 2], [11, 3], [12, 2], [12, 3]];
+        return [[11, 1], [11, 2], [11, 3], [11, 4]];
       case PlayerColor.GREEN:
-        return [[2, 11], [2, 12], [3, 11], [3, 12]];
+        return [[2, 10], [2, 11], [2, 12], [2, 13]];
       case PlayerColor.YELLOW:
-        return [[11, 11], [11, 12], [12, 11], [12, 12]];
+        return [[11, 10], [11, 11], [11, 12], [11, 13]];
       case PlayerColor.ORANGE:
-        return [[2, 2], [2, 3], [3, 2], [3, 3]];
+        return [[2, 1], [2, 2], [2, 3], [2, 4]];
       default:
         return [];
     }
@@ -2140,27 +2144,27 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 })}
                 
                 {/* Placeholder indicators for colors without players */}
-                                  {/* Orange home squares: [2,2], [2,3], [3,2], [3,3] */}
+                                  {/* Orange home squares: [2,1], [2,2], [2,3], [2,4] */}
                 {!currentGame?.players.some((player: Player) => player.color === 'orange') && 
-                 ((row === 2 && (col === 2 || col === 3)) || (row === 3 && (col === 2 || col === 3))) && (
+                 (row === 2 && (col === 1 || col === 2 || col === 3 || col === 4)) && (
                                       <div className="placeholder-disc orange-placeholder" />
                 )}
                 
-                {/* Yellow home squares: [11,11], [11,12], [12,11], [12,12] */}
+                {/* Yellow home squares: [11,10], [11,11], [11,12], [11,13] */}
                 {!currentGame?.players.some((player: Player) => player.color === 'yellow') && 
-                 ((row === 11 && (col === 11 || col === 12)) || (row === 12 && (col === 11 || col === 12))) && (
+                 (row === 11 && (col === 10 || col === 11 || col === 12 || col === 13)) && (
                   <div className="placeholder-disc yellow-placeholder" />
                 )}
                 
-                {/* Green home squares: [2,11], [2,12], [3,11], [3,12] */}
+                {/* Green home squares: [2,10], [2,11], [2,12], [2,13] */}
                 {!currentGame?.players.some((player: Player) => player.color === 'green') && 
-                 ((row === 2 && (col === 11 || col === 12)) || (row === 3 && (col === 11 || col === 12))) && (
+                 (row === 2 && (col === 10 || col === 11 || col === 12 || col === 13)) && (
                   <div className="placeholder-disc green-placeholder" />
                 )}
                 
-                {/* Blue home squares: [11,2], [11,3], [12,2], [12,3] */}
+                {/* Blue home squares: [11,1], [11,2], [11,3], [11,4] */}
                 {!currentGame?.players.some((player: Player) => player.color === 'blue') && 
-                 ((row === 11 && (col === 2 || col === 3)) || (row === 12 && (col === 2 || col === 3))) && (
+                 (row === 11 && (col === 1 || col === 2 || col === 3 || col === 4)) && (
                   <div className="placeholder-disc blue-placeholder" />
                 )}
               </div>
@@ -2185,16 +2189,43 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
             console.log('Game state:', currentGame?.gameState);
           }
           
-          // Position dice next to their name pills consistently
-          let diePosition = {};
-                          if (player.color === 'orange') {
-            diePosition = { top: '7.5%', left: '26%' }; // Same as green but left side, moved 16px right
+          // Position dice below the row of discs, centered horizontally
+          // The die should be as big as the space that the four original discs take
+          // Each grid cell is 43.125px
+          const cellSize = 43.125;
+          let diePosition: React.CSSProperties = {};
+          if (player.color === 'orange') {
+            // Orange discs are in row 2, cols 1-4 (center at col 2.5)
+            // Die should be below in row 3.85 (moved down to center between discs and bottom), centered horizontally at col 2.95 (moved right slightly)
+            diePosition = { 
+              top: `${3.85 * cellSize}px`, 
+              left: `${2.95 * cellSize}px`,
+              transform: 'translate(-50%, -50%)'
+            };
           } else if (player.color === 'green') {
-            diePosition = { top: '7.5%', right: '10%' }; // Position slightly higher (about 1px up)
+            // Green discs are in row 2, cols 10-13 (center at col 11.5)
+            // Die should be below in row 3.85 (perfect vertically), centered horizontally at col 11.95 (moved right slightly more)
+            diePosition = { 
+              top: `${3.85 * cellSize}px`, 
+              left: `${11.95 * cellSize}px`,
+              transform: 'translate(-50%, -50%)'
+            };
           } else if (player.color === 'blue') {
-            diePosition = { bottom: '27.5%', left: '25%' }; // Position halfway between previous positions
+            // Blue discs are in row 11, cols 1-4 (center at col 2.5)
+            // Die should be below in row 12.9 (moved down slightly more), centered horizontally at col 2.95
+            diePosition = { 
+              top: `${12.9 * cellSize}px`, 
+              left: `${2.95 * cellSize}px`,
+              transform: 'translate(-50%, -50%)'
+            };
           } else if (player.color === 'yellow') {
-            diePosition = { bottom: '27.5%', right: '10%' }; // Same as blue but right side, moved 20px right total
+            // Yellow discs are in row 11, cols 10-13 (center at col 11.5)
+            // Die should be below in row 12, centered horizontally at col 11.1 (moved left slightly)
+            diePosition = { 
+              top: `${12 * cellSize}px`, 
+              left: `${11.1 * cellSize}px`,
+              transform: 'translate(-50%, -50%)'
+            };
           }
           
           return (
@@ -2210,13 +2241,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 border: 'none',
                 padding: 0,
                 margin: 0,
-                width: '32px',
-                height: '32px',
-                borderRadius: '6px',
+                width: '86.25px', // 2 squares * 43.125px - as big as the space that the four original discs take
+                height: '86.25px', // 2 squares * 43.125px
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '16px',
+                fontSize: '40px', // Larger font for bigger die
                 position: 'absolute',
                 zIndex: 15
               }}
