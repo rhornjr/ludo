@@ -135,6 +135,12 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
     // Don't automatically hide it - let the StarterSelection component control its own visibility
   }, [currentGame?.gameState]);
 
+  const hasMovableDiscsForRoll = (dieValue: number | null): boolean => {
+    if (!dieValue) return false;
+    if (!localPlayerColor || localPlayerColor !== currentTurnColor) return false;
+    return hasValidMoves(dieValue, currentTurnColor);
+  };
+
   // Disable the die completely when rolling or when player has already rolled
   const handleDieClick = async () => {
     if (isRolling) {
@@ -142,16 +148,18 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
       return;
     }
     
-    // Prevent rolling if player has already rolled and hasn't made a move yet
-    // EXCEPT when they rolled a 6 - they always get to roll again
-    if (hasRolled && !moveMade && dieResult !== 6 && dieResult !== null) {
-      console.log('Die click blocked - already rolled, waiting for move (not a 6)');
+    const mustMoveBeforeNextRoll =
+      hasRolled &&
+      !moveMade &&
+      dieResult !== null &&
+      (dieResult !== 6 || hasMovableDiscsForRoll(dieResult));
+    if (mustMoveBeforeNextRoll) {
+      console.log('Die click blocked - already rolled, waiting for move');
       return;
     }
     
-    // If player rolled a 6, they can always roll again
-    if (hasRolled && !moveMade && dieResult === 6) {
-      console.log('Player rolled a 6, allowing them to roll again');
+    if (hasRolled && !moveMade && dieResult === 6 && !hasMovableDiscsForRoll(dieResult)) {
+      console.log('Player rolled a 6 with no valid moves, allowing immediate re-roll');
     }
     
     // Don't reset shouldGetExtraRoll here - let collision detection handle it
@@ -556,11 +564,11 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
               }, 2000); // Give 2 seconds for the player to see the result
             }
           } else if (result === 6) {
-            // Player rolled a 6 - they always get to roll again, regardless of valid moves
-            console.log('Player rolled a 6 - they get to roll again (regardless of valid moves)');
+            // Player rolled a 6 - they get another roll after moving if possible
+            console.log('Player rolled a 6 - extra roll after move when possible');
             // Don't switch turn - player keeps their turn for another roll
-            // If they have valid moves, they can make a move first, then roll again
-            // If they don't have valid moves, they just roll again
+            // If they have valid moves, they must move before rolling again
+            // If they don't have valid moves, they can roll again immediately
             const hasMoves = hasValidMoves(result, currentTurnColor);
             if (!hasMoves) {
               console.log('Rolled a 6 but no valid moves - enabling immediate re-roll');
@@ -1950,8 +1958,8 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                 key={number}
                 className={`force-die ${forcedRollNumber === number ? 'active' : ''}`}
                 style={{
-                  opacity: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade && dieResult !== null && dieResult !== 6)) ? 0.5 : 1,
-                  cursor: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade && dieResult !== null && dieResult !== 6)) ? 'not-allowed' : 'pointer'
+                  opacity: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade && dieResult !== null && (dieResult !== 6 || hasMovableDiscsForRoll(dieResult)))) ? 0.5 : 1,
+                  cursor: ((localPlayerColor && localPlayerColor !== currentTurnColor) || (hasRolled && !moveMade && dieResult !== null && (dieResult !== 6 || hasMovableDiscsForRoll(dieResult)))) ? 'not-allowed' : 'pointer'
                 }}
                 onClick={async () => {
                   console.log('Die clicked:', number);
@@ -1970,7 +1978,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
                   }
                   
                   // Prevent rolling if player has already rolled and hasn't made a move yet
-                  if (hasRolled && !moveMade && dieResult !== null && dieResult !== 6) {
+                  if (hasRolled && !moveMade && dieResult !== null && (dieResult !== 6 || hasMovableDiscsForRoll(dieResult))) {
                     console.log('Die click blocked - already rolled, waiting for move');
                     return;
                   }
@@ -2230,7 +2238,7 @@ export const LudoBoard: React.FC<LudoBoardProps> = ({ localPlayerColor, onPawnCl
         {currentGame?.players.map((player: Player) => {
           const isCurrentTurn = player.color === currentTurnColor;
           const isLocalPlayer = player.color === localPlayerColor;
-          const canRoll = isCurrentTurn && isLocalPlayer && !isRolling && !(hasRolled && !moveMade && dieResult !== null && dieResult !== 6);
+          const canRoll = isCurrentTurn && isLocalPlayer && !isRolling && !(hasRolled && !moveMade && dieResult !== null && (dieResult !== 6 || hasMovableDiscsForRoll(dieResult)));
           
           // Debug logging for the first player's die
           if (isLocalPlayer && isCurrentTurn) {
