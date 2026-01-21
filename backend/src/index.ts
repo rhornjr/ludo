@@ -12,7 +12,7 @@ const server = createServer(app);
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "http://192.168.4.71:3000"  // Current network IP
+  "http://192.168.4.78:3000"  // Current network IP
 ];
 
 const io = new Server(server, {
@@ -135,5 +135,5 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running on ${HOST}:${PORT}`);
-  console.log(`Local network access: http://192.168.4.71:${PORT}`);
+  console.log(`Local network access: http://192.168.4.78:${PORT}`);
 });

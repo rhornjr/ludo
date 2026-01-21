@@ -6,7 +6,7 @@ const config = {
   },
   // For local network access
   localNetwork: {
-    serverUrl: 'http://192.168.4.71:3001'
+    serverUrl: 'http://192.168.4.78:3001'
   },
   // For production (when you deploy)
   production: {

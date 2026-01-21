@@ -101,6 +101,14 @@
   font-weight: bold;
 }
 
+.player-color.debug-toggle {
+  cursor: pointer;
+}
+
+.player-color.debug-toggle:hover {
+  opacity: 0.85;
+}
+
 .player-color.orange {
   background: #ff9500;
 }

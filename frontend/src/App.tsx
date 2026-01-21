@@ -184,7 +184,21 @@ function App() {
             )}
             {currentPlayer && (
               <div className="player-info">
-                <span className={`player-color ${currentPlayer.color.toLowerCase()}`}>
+                <span
+                  className={`player-color ${currentPlayer.color.toLowerCase()} debug-toggle`}
+                  role="button"
+                  tabIndex={0}
+                  title="Toggle debug menu"
+                  onClick={() => {
+                    window.dispatchEvent(new Event('toggleDebugMenu'));
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      window.dispatchEvent(new Event('toggleDebugMenu'));
+                    }
+                  }}
+                >
                   {currentPlayer.name}
                 </span>
               </div>

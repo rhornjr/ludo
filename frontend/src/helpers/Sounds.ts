@@ -228,6 +228,67 @@ export class Sounds {
     }
   }
 
+  // Play "ta-da" sound when a disc reaches the final square
+  static async playFinalSquareSound(): Promise<void> {
+    try {
+      console.log('playFinalSquareSound called');
+
+      const ctx = await this.getAudioContext();
+      const now = ctx.currentTime;
+
+      const playNote = (
+        frequency: number,
+        startTime: number,
+        duration: number,
+        peakGain: number
+      ) => {
+        const gainNode = ctx.createGain();
+        gainNode.connect(ctx.destination);
+
+        const oscMain = ctx.createOscillator();
+        const oscDetune = ctx.createOscillator();
+
+        oscMain.connect(gainNode);
+        oscDetune.connect(gainNode);
+
+        oscMain.type = 'sawtooth';
+        oscDetune.type = 'square';
+
+        oscMain.frequency.setValueAtTime(frequency, startTime);
+        oscDetune.frequency.setValueAtTime(frequency * 1.007, startTime); // slight detune for richness
+
+        gainNode.gain.setValueAtTime(0.0001, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.03);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+        oscMain.start(startTime);
+        oscDetune.start(startTime);
+        oscMain.stop(startTime + duration);
+        oscDetune.stop(startTime + duration);
+      };
+
+      const playChord = (frequencies: number[], startTime: number, duration: number, peakGain: number) => {
+        frequencies.forEach((frequency, index) => {
+          const gainScale = 1 - index * 0.15;
+          playNote(frequency, startTime, duration, peakGain * gainScale);
+        });
+      };
+
+      // Bigger fanfare: pickup note, strong chord, then higher bright chord
+      playNote(392.0, now, 0.12, 0.16); // G4 pickup
+      const chord1Start = now + 0.08;
+      const chord2Start = now + 0.34;
+
+      // Chord 1: C major (C5, E5, G5) with longer tail
+      playChord([523.25, 659.25, 783.99], chord1Start, 0.36, 0.2);
+
+      // Chord 2: C major an octave up (C6, E6, G6) for the "da!"
+      playChord([1046.5, 1318.5, 1567.98], chord2Start, 0.45, 0.24);
+    } catch (error) {
+      console.log('Audio not supported or blocked by browser');
+    }
+  }
+
   // Play thump sound for knocked disc
   static async playThumpSound(): Promise<void> {
     try {
